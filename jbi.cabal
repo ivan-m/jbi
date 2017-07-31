@@ -1,0 +1,23 @@
+name:                jbi
+version:             0.1.0.0
+synopsis:            Just Build It - a "do what I mean" abstraction for Haskell build tools
+-- description:
+license:             MIT
+license-file:        LICENSE
+author:              Ivan Lazar Miljenovic
+maintainer:          Ivan.Miljenovic@gmail.com
+-- copyright:
+category:            Development
+build-type:          Simple
+extra-source-files:  ChangeLog.md, README.md
+cabal-version:       >=1.10
+
+library
+  -- exposed-modules:
+  -- other-modules:
+  -- other-extensions:
+  build-depends:       base >=4.9 && <4.10
+                     , aeson
+                     , turtle
+  hs-source-dirs:      src
+  default-language:    Haskell2010
