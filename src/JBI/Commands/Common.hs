@@ -37,17 +37,23 @@ instance IsString CommandPath where
 
 -- | Strip off type safety, run the function, put type safety back on.
 withTaggedF :: (Coercible a a', Coercible b b', Functor f)
-               => (a' -> f b') -> Tagged t a -> f (Tagged t b)
+               => (a' -> f (Maybe b')) -> Tagged t a -> f (Maybe (Tagged t b))
 withTaggedF f = fmap coerce . f . coerce
+
+tagMaybe :: Tagged t (Maybe a) -> Maybe (Tagged t a)
+tagMaybe = coerce
+
+maybeTag :: Maybe (Tagged t a) -> Tagged t (Maybe a)
+maybeTag = coerce
 
 class BuildTool bt where
   commandName :: Tagged bt CommandName
 
-  commandVersion :: Tagged bt CommandPath -> IO (Tagged bt (Maybe Version))
+  commandVersion :: Tagged bt CommandPath -> IO (Maybe (Tagged bt Version))
   commandVersion = withTaggedF tryFindVersion
 
-commandPath :: Tagged bt CommandName -> IO (Tagged bt (Maybe CommandPath))
-commandPath = withTaggedF findExecutable
+commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
+commandPath = withTaggedF findExecutable commandName
 
 data Command = Command
   { name      :: !String
