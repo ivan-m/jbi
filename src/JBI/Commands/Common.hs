@@ -35,6 +35,12 @@ newtype CommandPath = CommandPath { pathToCommand :: FilePath }
 instance IsString CommandPath where
   fromString = CommandPath
 
+newtype ProjectRoot = ProjectRoot { rootPath :: FilePath }
+  deriving (Eq, Ord, Show, Read)
+
+instance IsString ProjectRoot where
+  fromString = ProjectRoot
+
 -- | Strip off type safety, run the function, put type safety back on.
 withTaggedF :: (Coercible a a', Coercible b b', Functor f)
                => (a' -> f (Maybe b')) -> Tagged t a -> f (Maybe (Tagged t b))
@@ -51,6 +57,9 @@ class BuildTool bt where
 
   commandVersion :: Tagged bt CommandPath -> IO (Maybe (Tagged bt Version))
   commandVersion = withTaggedF tryFindVersion
+
+  -- | Try and determine the root directory for this project.
+  commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt FilePath))
 
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
