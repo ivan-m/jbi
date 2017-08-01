@@ -12,6 +12,7 @@ module JBI.Commands.Common where
 
 import Control.Applicative          (liftA2)
 import Data.Char                    (isDigit)
+import Data.Coerce                  (Coercible, coerce)
 import Data.String                  (IsString(..))
 import Data.Tagged
 import Data.Version                 (Version, parseVersion)
@@ -34,18 +35,19 @@ newtype CommandPath = CommandPath { pathToCommand :: FilePath }
 instance IsString CommandPath where
   fromString = CommandPath
 
+-- | Strip off type safety, run the function, put type safety back on.
+withTaggedF :: (Coercible a a', Coercible b b', Functor f)
+               => (a' -> f b') -> Tagged t a -> f (Tagged t b)
+withTaggedF f = fmap coerce . f . coerce
+
 class BuildTool bt where
   commandName :: Tagged bt CommandName
 
   commandVersion :: Tagged bt CommandPath -> IO (Tagged bt (Maybe Version))
-  commandVersion = fmap Tagged
-                   . tryFindVersion
-                   . pathToCommand . untag
+  commandVersion = withTaggedF tryFindVersion
 
 commandPath :: Tagged bt CommandName -> IO (Tagged bt (Maybe CommandPath))
-commandPath = fmap (Tagged . fmap CommandPath)
-              . findExecutable
-              . nameOfCommand . untag
+commandPath = withTaggedF findExecutable
 
 data Command = Command
   { name      :: !String
