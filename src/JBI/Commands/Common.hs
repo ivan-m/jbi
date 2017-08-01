@@ -65,13 +65,19 @@ data Installed = Installed
 --   it's contained in the first line of the output of @command
 --   --version@.
 tryFindVersion :: FilePath -> IO (Maybe Version)
-tryFindVersion cmd = do
-  vOut <- readProcessWithExitCode cmd ["--version"] ""
-  case vOut of
-    (ExitSuccess, ver, "") ->
-      case readP_to_S (parseVersion <* eof) (findVersion ver) of
-        [(v,"")] -> return (Just v)
-        _        -> return Nothing
-    _            -> return Nothing
+tryFindVersion cmd =
+  fmap (>>= parseVer) (tryRun cmd ["--version"])
   where
     findVersion str = takeWhile (liftA2 (||) isDigit (=='.')) (dropWhile (not . isDigit) str)
+
+    parseVer ver = case readP_to_S (parseVersion <* eof) (findVersion ver) of
+                     [(v,"")] -> Just v
+                     _        -> Nothing
+
+-- | Only return the stdout if the process was successful and had no stderr.
+tryRun :: FilePath -> [String] -> IO (Maybe String)
+tryRun cmd args = do
+  res <- readProcessWithExitCode cmd args ""
+  return $ case res of
+             (ExitSuccess, out, "") -> Just out
+             _                      -> Nothing
