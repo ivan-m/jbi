@@ -5,13 +5,15 @@ let
   inherit (nixpkgs) pkgs;
 
   f = { mkDerivation, aeson, base, directory, filepath, process
-      , stdenv
+      , stdenv, tagged
       }:
       mkDerivation {
         pname = "jbi";
         version = "0.1.0.0";
         src = ./.;
-        libraryHaskellDepends = [ aeson base directory filepath process ];
+        libraryHaskellDepends = [
+          aeson base directory filepath process tagged
+        ];
         description = "Just Build It - a \"do what I mean\" abstraction for Haskell build tools";
         license = stdenv.lib.licenses.mit;
       };

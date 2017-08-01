@@ -13,6 +13,7 @@ module JBI.Commands.Common where
 import Control.Applicative          (liftA2)
 import Data.Char                    (isDigit)
 import Data.String                  (IsString(..))
+import Data.Tagged
 import Data.Version                 (Version, parseVersion)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
@@ -20,12 +21,6 @@ import System.Process               (readProcessWithExitCode)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 --------------------------------------------------------------------------------
-
-newtype Proxied t a = Proxied { proxiedValue :: a }
-  deriving (Eq, Ord, Show, Read)
-
-instance (IsString a) => IsString (Proxied t a) where
-  fromString = Proxied . fromString
 
 newtype CommandName = CommandName { nameOfCommand :: String }
   deriving (Eq, Ord, Show, Read)
@@ -40,17 +35,17 @@ instance IsString CommandPath where
   fromString = CommandPath
 
 class BuildTool bt where
-  commandName :: Proxied bt CommandName
+  commandName :: Tagged bt CommandName
 
-  commandVersion :: Proxied bt CommandPath -> IO (Proxied bt (Maybe Version))
-  commandVersion = fmap Proxied
+  commandVersion :: Tagged bt CommandPath -> IO (Tagged bt (Maybe Version))
+  commandVersion = fmap Tagged
                    . tryFindVersion
-                   . pathToCommand . proxiedValue
+                   . pathToCommand . untag
 
-commandPath :: Proxied bt CommandName -> IO (Proxied bt (Maybe CommandPath))
-commandPath = fmap (Proxied . fmap CommandPath)
+commandPath :: Tagged bt CommandName -> IO (Tagged bt (Maybe CommandPath))
+commandPath = fmap (Tagged . fmap CommandPath)
               . findExecutable
-              . nameOfCommand . proxiedValue
+              . nameOfCommand . untag
 
 data Command = Command
   { name      :: !String
