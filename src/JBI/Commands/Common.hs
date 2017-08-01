@@ -55,14 +55,22 @@ class BuildTool bt where
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
 
+commandInformation :: (BuildTool bt) => IO (Maybe (Tagged bt Installed))
+commandInformation = commandPath >>= mapM getVersion
+  where
+    getVersion :: (BuildTool bt') => Tagged bt' CommandPath -> IO (Tagged bt' Installed)
+    getVersion tcp = liftA2 Installed tcp  . maybeTag <$> commandVersion tcp
+
 data Command = Command
   { name      :: !String
   , installed :: !(Maybe Installed)
   } deriving (Eq, Ord, Show, Read)
 
 data Installed = Installed
-  { path    :: !FilePath
+  { path    :: !CommandPath
   , version :: !(Maybe Version)
+               -- ^ Try and determine the version.  Only a factor in
+               --   case any features are version-specific.
   } deriving (Eq, Ord, Show, Read)
 
 --------------------------------------------------------------------------------
