@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {- |
    Module      : JBI.Commands.Stack
    Description : Stack commands
@@ -14,5 +15,7 @@ import JBI.Commands.Common
 
 --------------------------------------------------------------------------------
 
-getCommand :: IO Command
-getCommand = defaultCommand "stack"
+data Stack
+
+instance BuildTool Stack where
+  commandName = "stack"

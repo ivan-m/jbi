@@ -12,6 +12,7 @@ module JBI.Commands.Common where
 
 import Control.Applicative          (liftA2)
 import Data.Char                    (isDigit)
+import Data.String                  (IsString(..))
 import Data.Version                 (Version, parseVersion)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
@@ -19,6 +20,37 @@ import System.Process               (readProcessWithExitCode)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 --------------------------------------------------------------------------------
+
+newtype Proxied t a = Proxied { proxiedValue :: a }
+  deriving (Eq, Ord, Show, Read)
+
+instance (IsString a) => IsString (Proxied t a) where
+  fromString = Proxied . fromString
+
+newtype CommandName = CommandName { nameOfCommand :: String }
+  deriving (Eq, Ord, Show, Read)
+
+instance IsString CommandName where
+  fromString = CommandName
+
+newtype CommandPath = CommandPath { pathToCommand :: FilePath }
+  deriving (Eq, Ord, Show, Read)
+
+instance IsString CommandPath where
+  fromString = CommandPath
+
+class BuildTool bt where
+  commandName :: Proxied bt CommandName
+
+  commandVersion :: Proxied bt CommandPath -> IO (Proxied bt (Maybe Version))
+  commandVersion = fmap Proxied
+                   . tryFindVersion
+                   . pathToCommand . proxiedValue
+
+commandPath :: Proxied bt CommandName -> IO (Proxied bt (Maybe CommandPath))
+commandPath = fmap (Proxied . fmap CommandPath)
+              . findExecutable
+              . nameOfCommand . proxiedValue
 
 data Command = Command
   { name      :: !String
@@ -31,17 +63,6 @@ data Installed = Installed
   } deriving (Eq, Ord, Show, Read)
 
 --------------------------------------------------------------------------------
-
--- | Create a 'Command' by assuming the version is easily obtainable.
-defaultCommand :: String -> IO Command
-defaultCommand cmd = Command cmd <$> defaultInstalled cmd
-
-defaultInstalled :: String -> IO (Maybe Installed)
-defaultInstalled cmd = do
-  mPth <- findExecutable cmd
-  case mPth of
-    Nothing  -> return Nothing
-    Just pth -> Just . Installed pth <$> tryFindVersion pth
 
 -- | Attempt to find the version of the provided command, by assuming
 --   it's contained in the first line of the output of @command
