@@ -13,6 +13,7 @@ module JBI.Commands.Common where
 import Control.Applicative          (liftA2)
 import Data.Char                    (isDigit)
 import Data.Coerce                  (Coercible, coerce)
+import Data.Maybe                   (listToMaybe)
 import Data.String                  (IsString(..))
 import Data.Tagged
 import Data.Version                 (Version, parseVersion)
@@ -20,7 +21,6 @@ import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
 import System.Process               (readProcessWithExitCode)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
-import Data.Maybe (listToMaybe)
 
 --------------------------------------------------------------------------------
 
