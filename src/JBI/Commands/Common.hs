@@ -27,6 +27,40 @@ import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 --------------------------------------------------------------------------------
 
+class BuildTool bt where
+  commandName :: Tagged bt CommandName
+
+  commandVersion :: Tagged bt CommandPath -> IO (Maybe (Tagged bt Version))
+  commandVersion = withTaggedF tryFindVersion
+
+  -- | Try and determine the root directory for this project.
+  commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt FilePath))
+
+  commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
+
+commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
+commandPath = withTaggedF findExecutable commandName
+
+commandInformation :: (BuildTool bt) => IO (Maybe (Tagged bt Installed))
+commandInformation = commandPath >>= mapM getVersion
+  where
+    getVersion :: (BuildTool bt') => Tagged bt' CommandPath -> IO (Tagged bt' Installed)
+    getVersion tcp = liftA2 Installed tcp  . tagOuter <$> commandVersion tcp
+
+--------------------------------------------------------------------------------
+
+data Command = Command
+  { name      :: !String
+  , installed :: !(Maybe Installed)
+  } deriving (Eq, Ord, Show, Read)
+
+data Installed = Installed
+  { path    :: !CommandPath
+  , version :: !(Maybe Version)
+               -- ^ Try and determine the version.  Only a factor in
+               --   case any features are version-specific.
+  } deriving (Eq, Ord, Show, Read)
+
 newtype CommandName = CommandName { nameOfCommand :: String }
   deriving (Eq, Ord, Show, Read)
 
@@ -52,6 +86,9 @@ newtype ProjectTarget = ProjectTarget { target :: String }
 instance IsString ProjectTarget where
   fromString = ProjectTarget
 
+--------------------------------------------------------------------------------
+-- Tagged support
+
 class WithTagged (g :: * -> *) where
 
   -- | Strip off type safety, run the function, put type safety back on.
@@ -74,38 +111,6 @@ class WithTagged (g :: * -> *) where
 
 instance WithTagged Maybe
 instance WithTagged []
-
-class BuildTool bt where
-  commandName :: Tagged bt CommandName
-
-  commandVersion :: Tagged bt CommandPath -> IO (Maybe (Tagged bt Version))
-  commandVersion = withTaggedF tryFindVersion
-
-  -- | Try and determine the root directory for this project.
-  commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt FilePath))
-
-  commandTargets :: Tagged bt CommandPath -> IO ([Tagged bt ProjectTarget])
-
-commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
-commandPath = withTaggedF findExecutable commandName
-
-commandInformation :: (BuildTool bt) => IO (Maybe (Tagged bt Installed))
-commandInformation = commandPath >>= mapM getVersion
-  where
-    getVersion :: (BuildTool bt') => Tagged bt' CommandPath -> IO (Tagged bt' Installed)
-    getVersion tcp = liftA2 Installed tcp  . tagOuter <$> commandVersion tcp
-
-data Command = Command
-  { name      :: !String
-  , installed :: !(Maybe Installed)
-  } deriving (Eq, Ord, Show, Read)
-
-data Installed = Installed
-  { path    :: !CommandPath
-  , version :: !(Maybe Version)
-               -- ^ Try and determine the version.  Only a factor in
-               --   case any features are version-specific.
-  } deriving (Eq, Ord, Show, Read)
 
 --------------------------------------------------------------------------------
 
