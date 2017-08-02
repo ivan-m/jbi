@@ -1,3 +1,6 @@
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, KindSignatures,
+             MultiParamTypeClasses #-}
+
 {- |
    Module      : JBI.Commands.Common
    Description : Common datatypes for commands
@@ -42,16 +45,35 @@ newtype ProjectRoot = ProjectRoot { rootPath :: FilePath }
 instance IsString ProjectRoot where
   fromString = ProjectRoot
 
--- | Strip off type safety, run the function, put type safety back on.
-withTaggedF :: (Coercible a a', Coercible b b', Functor f)
-               => (a' -> f (Maybe b')) -> Tagged t a -> f (Maybe (Tagged t b))
-withTaggedF f = fmap coerce . f . coerce
+-- | TODO: determine if this is a library, executable, test or benchmark component.
+newtype ProjectTarget = ProjectTarget { target :: String }
+  deriving (Eq, Ord, Show, Read)
 
-tagMaybe :: Tagged t (Maybe a) -> Maybe (Tagged t a)
-tagMaybe = coerce
+instance IsString ProjectTarget where
+  fromString = ProjectTarget
 
-maybeTag :: Maybe (Tagged t a) -> Tagged t (Maybe a)
-maybeTag = coerce
+class WithTagged (g :: * -> *) where
+
+  -- | Strip off type safety, run the function, put type safety back on.
+  withTaggedF :: (Coercible a a', Coercible b b', Functor f)
+                 => (a' -> f (g b')) -> Tagged t a -> f (g (Tagged t b))
+  default withTaggedF :: (Coercible a a', Coercible b b', Functor f
+                         , Coercible (g b') (g (Tagged t b)))
+                         => (a' -> f (g b')) -> Tagged t a -> f (g (Tagged t b))
+  withTaggedF f = fmap coerce . f . coerce
+
+  tagInner :: Tagged t (g a) -> g (Tagged t a)
+  default tagInner :: (Coercible (Tagged t (g a)) (g (Tagged t a)))
+                      => Tagged t (g a) -> g (Tagged t a)
+  tagInner = coerce
+
+  tagOuter :: g (Tagged t a) -> Tagged t (g a)
+  default tagOuter :: (Coercible (g (Tagged t a)) (Tagged t (g a)))
+                      => g (Tagged t a) -> Tagged t (g a)
+  tagOuter = coerce
+
+instance WithTagged Maybe
+instance WithTagged []
 
 class BuildTool bt where
   commandName :: Tagged bt CommandName
@@ -69,7 +91,7 @@ commandInformation :: (BuildTool bt) => IO (Maybe (Tagged bt Installed))
 commandInformation = commandPath >>= mapM getVersion
   where
     getVersion :: (BuildTool bt') => Tagged bt' CommandPath -> IO (Tagged bt' Installed)
-    getVersion tcp = liftA2 Installed tcp  . maybeTag <$> commandVersion tcp
+    getVersion tcp = liftA2 Installed tcp  . tagOuter <$> commandVersion tcp
 
 data Command = Command
   { name      :: !String
