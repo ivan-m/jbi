@@ -35,7 +35,7 @@ class BuildTool bt where
   commandVersion = withTaggedF tryFindVersion
 
   -- | Try and determine the root directory for this project.
-  commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt FilePath))
+  commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt ProjectRoot))
 
   commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
