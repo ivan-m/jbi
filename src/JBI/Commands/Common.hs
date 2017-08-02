@@ -39,6 +39,10 @@ class BuildTool bt where
 
   commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
+  -- | Assumes 'commandProjectRoot' is 'Just'.
+  commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
+                  -> IO Bool
+
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
 
@@ -61,6 +65,9 @@ data Installed = Installed
                -- ^ Try and determine the version.  Only a factor in
                --   case any features are version-specific.
   } deriving (Eq, Ord, Show, Read)
+
+-- | Empty for now, but denote non-specific configurations.
+data GlobalEnv = GlobalEnv
 
 newtype CommandName = CommandName { nameOfCommand :: String }
   deriving (Eq, Ord, Show, Read)
@@ -112,6 +119,11 @@ class WithTagged (g :: * -> *) where
 
 instance WithTagged Maybe
 instance WithTagged []
+
+-- | Remove the tag along with (potentially) any newtype wrappers
+--   added on.
+stripTag :: (Coercible a a') => Tagged t a -> a'
+stripTag = coerce
 
 --------------------------------------------------------------------------------
 

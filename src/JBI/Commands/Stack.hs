@@ -14,6 +14,7 @@ module JBI.Commands.Stack where
 import JBI.Commands.Common
 
 import Data.List        (isPrefixOf)
+import Data.Maybe       (maybeToList)
 import System.Directory (getCurrentDirectory)
 import System.FilePath  (dropTrailingPathSeparator, normalise)
 
@@ -42,3 +43,7 @@ instance BuildTool Stack where
   commandTargets = withTaggedF go
     where
       go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]
+
+  commandBuild _env cmd mt = tryRun (stripTag cmd) args
+    where
+      args = "build" : maybeToList (fmap stripTag mt)
