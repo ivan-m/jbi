@@ -37,6 +37,8 @@ class BuildTool bt where
   -- | Try and determine the root directory for this project.
   commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt ProjectRoot))
 
+  hasBuildArtifacts :: Tagged bt ProjectRoot -> IO Bool
+
   commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
@@ -47,7 +49,10 @@ class BuildTool bt where
   commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                  -> IO Bool
 
-  -- | Assumes 'commandProjectRoot' is 'Just'.
+  -- | Remove /all/ build artifacts of using this build tool (that is,
+  --   afterwards 'hasBuildArtifacts' should return 'False').
+  --
+  --   Assumes 'commandProjectRoot' is 'Just'.
   commandClean :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
 
   -- | Assumes 'commandProjectRoot' is 'Just'.

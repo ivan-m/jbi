@@ -16,8 +16,8 @@ import JBI.Commands.Common
 import Data.List        (isPrefixOf)
 import Data.Maybe       (maybeToList)
 import Data.Tagged      (Tagged)
-import System.Directory (getCurrentDirectory)
-import System.FilePath  (dropTrailingPathSeparator, normalise)
+import System.Directory (doesDirectoryExist, getCurrentDirectory)
+import System.FilePath  (dropTrailingPathSeparator, normalise, (</>))
 
 --------------------------------------------------------------------------------
 
@@ -41,6 +41,8 @@ instance BuildTool Stack where
       -- canonicalizePath by "knowing" that they're both directories.
       cleanse = normalise . dropTrailingPathSeparator
 
+  hasBuildArtifacts dir = doesDirectoryExist (stripTag dir </> ".stack-work")
+
   commandTargets = withTaggedF go
     where
       go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]
@@ -49,7 +51,7 @@ instance BuildTool Stack where
 
   commandRepl = commandArgTarget "ghci"
 
-  commandClean = commandArg "clean"
+  commandClean = commandArgs ["clean", "--full"]
 
   commandTest = commandArg "test"
 
@@ -63,4 +65,8 @@ commandArgTarget arg _env cmd mt = tryRun (stripTag cmd) args
 
 commandArg :: String -> GlobalEnv -> Tagged Stack CommandPath
               -> IO Bool
-commandArg arg _env cmd = tryRun (stripTag cmd) [arg]
+commandArg arg = commandArgs [arg]
+
+commandArgs :: Args -> GlobalEnv -> Tagged Stack CommandPath
+               -> IO Bool
+commandArgs args _env cmd = tryRun (stripTag cmd) args
