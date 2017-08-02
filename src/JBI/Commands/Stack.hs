@@ -41,4 +41,4 @@ instance BuildTool Stack where
 
   commandTargets = withTaggedF go
     where
-      go cmd = maybe [] lines <$> tryRun cmd ["ide", "targets"]
+      go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]

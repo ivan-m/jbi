@@ -119,7 +119,7 @@ instance WithTagged []
 --   --version@.
 tryFindVersion :: FilePath -> IO (Maybe Version)
 tryFindVersion cmd =
-  fmap (>>= parseVer) (tryRun cmd ["--version"])
+  fmap (>>= parseVer) (tryRunOutput cmd ["--version"])
   where
     findVersion str = takeWhile (liftA2 (||) isDigit (=='.')) (dropWhile (not . isDigit) str)
 
@@ -128,13 +128,13 @@ tryFindVersion cmd =
                      _        -> Nothing
 
 -- | Only return the stdout if the process was successful and had no stderr.
-tryRun :: FilePath -> [String] -> IO (Maybe String)
-tryRun cmd args = do
+tryRunOutput :: FilePath -> [String] -> IO (Maybe String)
+tryRunOutput cmd args = do
   res <- readProcessWithExitCode cmd args ""
   return $ case res of
              (ExitSuccess, out, "") -> Just out
              _                      -> Nothing
 
--- | As with 'tryRun' but only return the first line (if any).
+-- | As with 'tryRunOutput' but only return the first line (if any).
 tryRunLine :: FilePath -> [String] -> IO (Maybe String)
-tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRun cmd
+tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cmd
