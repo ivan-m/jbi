@@ -43,6 +43,10 @@ class BuildTool bt where
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                   -> IO Bool
 
+  -- | Assumes 'commandProjectRoot' is 'Just'.
+  commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
+                 -> IO Bool
+
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
 
