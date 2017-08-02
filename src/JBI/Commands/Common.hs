@@ -22,7 +22,8 @@ import Data.Tagged
 import Data.Version                 (Version, parseVersion)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
-import System.Process               (readProcessWithExitCode)
+import System.Process               (readProcessWithExitCode, spawnProcess,
+                                     waitForProcess)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 --------------------------------------------------------------------------------
@@ -127,8 +128,10 @@ tryFindVersion cmd =
                      [(v,"")] -> Just v
                      _        -> Nothing
 
+type Args = [String]
+
 -- | Only return the stdout if the process was successful and had no stderr.
-tryRunOutput :: FilePath -> [String] -> IO (Maybe String)
+tryRunOutput :: FilePath -> Args -> IO (Maybe String)
 tryRunOutput cmd args = do
   res <- readProcessWithExitCode cmd args ""
   return $ case res of
@@ -136,5 +139,24 @@ tryRunOutput cmd args = do
              _                      -> Nothing
 
 -- | As with 'tryRunOutput' but only return the first line (if any).
-tryRunLine :: FilePath -> [String] -> IO (Maybe String)
+tryRunLine :: FilePath -> Args -> IO (Maybe String)
 tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cmd
+
+-- | Returns success of call.
+tryRun :: FilePath -> Args -> IO Bool
+tryRun cmd args = do
+  ph <- spawnProcess cmd args
+  ec <- waitForProcess ph
+  return (ec == ExitSuccess)
+
+-- | Equivalent to chaining all the calls with @&&@ in bash, etc.
+--
+--   Argument order to make it easier to feed it into a 'Tagged'-based
+--   pipeline.
+tryRunAll :: [Args] -> FilePath -> IO Bool
+tryRunAll argss cmd = allM (tryRun cmd) argss
+
+-- | Monad version of 'all', aborts the computation at the first @False@ value
+allM :: Monad m => (a -> m Bool) -> [a] -> m Bool
+allM _ []     = return True
+allM f (b:bs) = f b >>= (\bv -> if bv then allM f bs else return False)
