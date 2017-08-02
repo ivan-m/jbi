@@ -47,6 +47,15 @@ class BuildTool bt where
   commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                  -> IO Bool
 
+  -- | Assumes 'commandProjectRoot' is 'Just'.
+  commandClean :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
+
+  -- | Assumes 'commandProjectRoot' is 'Just'.
+  commandTest :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
+
+  -- | Assumes 'commandProjectRoot' is 'Just'.
+  commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
+
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
 

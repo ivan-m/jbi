@@ -45,12 +45,22 @@ instance BuildTool Stack where
     where
       go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]
 
-  commandBuild = commandArg "build"
+  commandBuild = commandArgTarget "build"
 
-  commandRepl = commandArg "ghci"
+  commandRepl = commandArgTarget "ghci"
 
-commandArg :: String -> GlobalEnv -> Tagged Stack CommandPath
-              -> Maybe (Tagged Stack ProjectTarget) -> IO Bool
-commandArg arg _env cmd mt = tryRun (stripTag cmd) args
+  commandClean = commandArg "clean"
+
+  commandTest = commandArg "test"
+
+  commandBench = commandArg "bench"
+
+commandArgTarget :: String -> GlobalEnv -> Tagged Stack CommandPath
+                    -> Maybe (Tagged Stack ProjectTarget) -> IO Bool
+commandArgTarget arg _env cmd mt = tryRun (stripTag cmd) args
   where
     args = arg : maybeToList (fmap stripTag mt)
+
+commandArg :: String -> GlobalEnv -> Tagged Stack CommandPath
+              -> IO Bool
+commandArg arg _env cmd = tryRun (stripTag cmd) [arg]
