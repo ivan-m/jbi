@@ -38,3 +38,7 @@ instance BuildTool Stack where
       -- Just in case; this is a poor-man's version of
       -- canonicalizePath by "knowing" that they're both directories.
       cleanse = normalise . dropTrailingPathSeparator
+
+  commandTargets = withTaggedF go
+    where
+      go cmd = maybe [] lines <$> tryRun cmd ["ide", "targets"]

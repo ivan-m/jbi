@@ -84,6 +84,8 @@ class BuildTool bt where
   -- | Try and determine the root directory for this project.
   commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt FilePath))
 
+  commandTargets :: Tagged bt CommandPath -> IO ([Tagged bt ProjectTarget])
+
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
 
