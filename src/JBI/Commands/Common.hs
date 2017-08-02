@@ -20,6 +20,7 @@ import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
 import System.Process               (readProcessWithExitCode)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
+import Data.Maybe (listToMaybe)
 
 --------------------------------------------------------------------------------
 
@@ -104,3 +105,7 @@ tryRun cmd args = do
   return $ case res of
              (ExitSuccess, out, "") -> Just out
              _                      -> Nothing
+
+-- | As with 'tryRun' but only return the first line (if any).
+tryRunLine :: FilePath -> [String] -> IO (Maybe String)
+tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRun cmd

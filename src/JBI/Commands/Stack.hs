@@ -13,8 +13,7 @@ module JBI.Commands.Stack where
 
 import JBI.Commands.Common
 
-import Data.Char        (isSpace)
-import Data.List        (dropWhileEnd, isPrefixOf)
+import Data.List        (isPrefixOf)
 import System.Directory (getCurrentDirectory)
 import System.FilePath  (dropTrailingPathSeparator, normalise)
 
@@ -27,17 +26,14 @@ instance BuildTool Stack where
 
   commandProjectRoot = withTaggedF go
     where
-      go cmd = do mProjRoot <- tryRun cmd ["path", "--project-root"]
-                  case cleanse . getPath <$> mProjRoot of
+      go cmd = do mProjRoot <- tryRunLine cmd ["path", "--project-root"]
+                  case cleanse <$> mProjRoot of
                     Nothing -> return Nothing
                     Just root -> do
                       currDir <- cleanse <$> getCurrentDirectory
                       return $ if root `isPrefixOf` currDir
                                   then Just root
                                   else Nothing
-
-      -- Remove the trailing newline
-      getPath = dropWhileEnd isSpace
 
       -- Just in case; this is a poor-man's version of
       -- canonicalizePath by "knowing" that they're both directories.
