@@ -17,7 +17,6 @@ import JBI.Tagged
 
 import Control.Applicative (liftA2)
 import Data.Char           (isSpace)
-import Data.Proxy          (Proxy(Proxy))
 
 --------------------------------------------------------------------------------
 
@@ -32,16 +31,10 @@ findNixSupport = liftA2 NixSupport commandInformation
 
 data NixShell
 
-pNixShell :: Proxy NixShell
-pNixShell = Proxy
-
 instance Tool NixShell where
   commandName = "nix-shell"
 
 data Cabal2Nix
-
-pCabal2Nix :: Proxy Cabal2Nix
-pCabal2Nix = Proxy
 
 instance Tool Cabal2Nix where
   commandName = "cabal2nix"
