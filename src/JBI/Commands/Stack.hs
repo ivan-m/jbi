@@ -65,7 +65,7 @@ instance BuildTool Stack where
 
 commandArgTarget :: String -> GlobalEnv -> Tagged Stack CommandPath
                     -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
-commandArgTarget arg _env cmd mt = tryRun (stripTag cmd) args
+commandArgTarget arg env cmd mt = commandArgs args env cmd
   where
     args = arg : maybeToList (fmap stripTag mt)
 
@@ -75,4 +75,4 @@ commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> GlobalEnv -> Tagged Stack CommandPath
                -> IO ExitCode
-commandArgs args _env cmd = tryRun (stripTag cmd) args
+commandArgs args _env cmd = tryRun cmd args

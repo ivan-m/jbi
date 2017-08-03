@@ -99,20 +99,22 @@ tryRunLine :: FilePath -> Args -> IO (Maybe String)
 tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cmd
 
 -- | Returns success of call.
-tryRun :: FilePath -> Args -> IO ExitCode
+tryRun :: Tagged t CommandPath -> Args -> IO ExitCode
 tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
                     waitForProcess ph
   where
-    cp = (proc cmd args) { std_in  = Inherit
-                         , std_out = Inherit
-                         , std_err = Inherit
-                         }
+    cmd' = stripTag cmd
+
+    cp = (proc cmd' args) { std_in  = Inherit
+                          , std_out = Inherit
+                          , std_err = Inherit
+                          }
 
 -- | Equivalent to chaining all the calls with @&&@ in bash, etc.
 --
 --   Argument order to make it easier to feed it into a 'Tagged'-based
 --   pipeline.
-tryRunAll :: [Args] -> FilePath -> IO ExitCode
+tryRunAll :: [Args] -> Tagged t CommandPath -> IO ExitCode
 tryRunAll argss cmd = allSuccess $ map (tryRun cmd) argss
 
 (.&&.) :: (Monad m) => m ExitCode -> m ExitCode -> m ExitCode
