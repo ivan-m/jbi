@@ -22,8 +22,9 @@ import Data.Tagged
 import Data.Version                 (Version, parseVersion)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
-import System.Process               (readProcessWithExitCode, spawnProcess,
-                                     waitForProcess)
+import System.Process               (CreateProcess(..), StdStream(Inherit),
+                                     proc, readProcessWithExitCode,
+                                     waitForProcess, withCreateProcess)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 --------------------------------------------------------------------------------
@@ -174,10 +175,13 @@ tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cmd
 
 -- | Returns success of call.
 tryRun :: FilePath -> Args -> IO Bool
-tryRun cmd args = do
-  ph <- spawnProcess cmd args
-  ec <- waitForProcess ph
-  return (ec == ExitSuccess)
+tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
+                    (==ExitSuccess) <$> waitForProcess ph
+  where
+    cp = (proc cmd args) { std_in  = Inherit
+                         , std_out = Inherit
+                         , std_err = Inherit
+                         }
 
 -- | Equivalent to chaining all the calls with @&&@ in bash, etc.
 --
