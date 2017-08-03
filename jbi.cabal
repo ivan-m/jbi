@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:     JBI.Commands
                      , JBI.Commands.BuildTool
+                     , JBI.Commands.Cabal
                      , JBI.Commands.Nix
                      , JBI.Commands.Stack
                      , JBI.Commands.Tool
