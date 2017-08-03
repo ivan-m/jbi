@@ -44,6 +44,8 @@ instance BuildTool Stack where
 
   hasBuildArtifacts dir = doesDirectoryExist (stripTag dir </> ".stack-work")
 
+  commandPrepare = commandArgs ["build", "--dry-run"]
+
   commandTargets = withTaggedF go
     where
       go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]

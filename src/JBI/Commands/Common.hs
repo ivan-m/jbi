@@ -40,6 +40,18 @@ class BuildTool bt where
 
   hasBuildArtifacts :: Tagged bt ProjectRoot -> IO Bool
 
+  -- | Ensure's that 'hasBuildArtifacts' is 'True' afterwards;
+  --   i.e. forces this build tool.
+  --
+  --   The intent for this is \"No build tool is currently being used
+  --   (i.e. 'hasBuildArtifacts' is 'False' for all) so start using
+  --   the one chosen.\" This will not do the equivalent of @stack
+  --   init@ and create project configuration.
+  --
+  --   Some manual fiddling is allowed after this.
+  commandPrepare :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectRoot
+                    -> IO ExitCode
+
   commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
