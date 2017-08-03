@@ -12,10 +12,11 @@
 module JBI.Commands.Stack where
 
 import JBI.Commands.BuildTool
+import JBI.Commands.Tool
+import JBI.Tagged
 
 import Data.List        (isPrefixOf)
 import Data.Maybe       (maybeToList)
-import Data.Tagged      (Tagged)
 import System.Directory (doesDirectoryExist, getCurrentDirectory)
 import System.Exit      (ExitCode)
 import System.FilePath  (dropTrailingPathSeparator, normalise, (</>))
@@ -24,8 +25,10 @@ import System.FilePath  (dropTrailingPathSeparator, normalise, (</>))
 
 data Stack
 
-instance BuildTool Stack where
+instance Tool Stack where
   commandName = "stack"
+
+instance BuildTool Stack where
 
   commandProjectRoot = withTaggedF go
     where
