@@ -64,11 +64,6 @@ class (Tool bt) => BuildTool bt where
 
 --------------------------------------------------------------------------------
 
-data Command = Command
-  { name      :: !String
-  , installed :: !(Maybe Installed)
-  } deriving (Eq, Ord, Show, Read)
-
 -- | Empty for now, but denote non-specific configurations.
 data GlobalEnv = GlobalEnv
 
