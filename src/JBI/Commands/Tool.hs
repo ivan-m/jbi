@@ -35,11 +35,11 @@ class Tool t where
 commandPath :: (Tool t) => IO (Maybe (Tagged t CommandPath))
 commandPath = withTaggedF findExecutable commandName
 
-commandInformation :: (Tool t) => IO (Maybe (Tagged t Installed))
+commandInformation :: (Tool t) => IO (Maybe (Installed t))
 commandInformation = commandPath >>= mapM getVersion
   where
-    getVersion :: (Tool t') => Tagged t' CommandPath -> IO (Tagged t' Installed)
-    getVersion tcp = liftA2 Installed tcp  . tagOuter <$> commandVersion tcp
+    getVersion :: (Tool t') => Tagged t' CommandPath -> IO (Installed t')
+    getVersion tcp = Installed tcp <$> commandVersion tcp
 
 --------------------------------------------------------------------------------
 
@@ -55,9 +55,9 @@ newtype CommandPath = CommandPath { pathToCommand :: FilePath }
 instance IsString CommandPath where
   fromString = CommandPath
 
-data Installed = Installed
-  { path    :: !CommandPath
-  , version :: !(Maybe Version)
+data Installed t = Installed
+  { path    :: !(Tagged t CommandPath)
+  , version :: !(Maybe (Tagged t Version))
                -- ^ Try and determine the version.  Only a factor in
                --   case any features are version-specific.
   } deriving (Eq, Ord, Show, Read)

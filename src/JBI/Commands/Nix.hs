@@ -15,24 +15,20 @@ module JBI.Commands.Nix where
 import JBI.Commands.Tool
 import JBI.Tagged
 
-import Data.Char  (isSpace)
-import Data.Proxy (Proxy(Proxy))
+import Control.Applicative (liftA2)
+import Data.Char           (isSpace)
+import Data.Proxy          (Proxy(Proxy))
 
 --------------------------------------------------------------------------------
 
 data NixSupport = NixSupport
-  { nixShell  :: !(Maybe Installed)
-  , cabal2Nix :: !(Maybe Installed)
+  { nixShell  :: !(Maybe (Installed NixShell))
+  , cabal2Nix :: !(Maybe (Installed Cabal2Nix))
   } deriving (Eq, Ord, Show, Read)
 
 findNixSupport :: IO NixSupport
-findNixSupport = do
-  mns  <- commandInformation
-  mc2n <- commandInformation
-  return $ NixSupport
-    { nixShell  = (`proxy` pNixShell)  <$> mns
-    , cabal2Nix = (`proxy` pCabal2Nix) <$> mc2n
-    }
+findNixSupport = liftA2 NixSupport commandInformation
+                                   commandInformation
 
 data NixShell
 
