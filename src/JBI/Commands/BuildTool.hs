@@ -14,6 +14,7 @@
 module JBI.Commands.BuildTool where
 
 import JBI.Commands.Tool
+import JBI.Environment.Global
 import JBI.Tagged
 
 import Data.String (IsString(..))
@@ -63,9 +64,6 @@ class (Tool bt) => BuildTool bt where
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
 --------------------------------------------------------------------------------
-
--- | Empty for now, but denote non-specific configurations.
-data GlobalEnv = GlobalEnv
 
 newtype ProjectRoot = ProjectRoot { rootPath :: FilePath }
   deriving (Eq, Ord, Show, Read)
