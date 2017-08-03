@@ -44,23 +44,23 @@ class BuildTool bt where
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
-                  -> IO Bool
+                  -> IO ExitCode
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
   commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
-                 -> IO Bool
+                 -> IO ExitCode
 
   -- | Remove /all/ build artifacts of using this build tool (that is,
   --   afterwards 'hasBuildArtifacts' should return 'False').
   --
   --   Assumes 'commandProjectRoot' is 'Just'.
-  commandClean :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
+  commandClean :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
-  commandTest :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
+  commandTest :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
-  commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
+  commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
 commandPath :: (BuildTool bt) => IO (Maybe (Tagged bt CommandPath))
 commandPath = withTaggedF findExecutable commandName
@@ -174,9 +174,9 @@ tryRunLine :: FilePath -> Args -> IO (Maybe String)
 tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cmd
 
 -- | Returns success of call.
-tryRun :: FilePath -> Args -> IO Bool
+tryRun :: FilePath -> Args -> IO ExitCode
 tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
-                    (==ExitSuccess) <$> waitForProcess ph
+                    waitForProcess ph
   where
     cp = (proc cmd args) { std_in  = Inherit
                          , std_out = Inherit
@@ -187,8 +187,19 @@ tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
 --
 --   Argument order to make it easier to feed it into a 'Tagged'-based
 --   pipeline.
-tryRunAll :: [Args] -> FilePath -> IO Bool
-tryRunAll argss cmd = allM (tryRun cmd) argss
+tryRunAll :: [Args] -> FilePath -> IO ExitCode
+tryRunAll argss cmd = allSuccess $ map (tryRun cmd) argss
+
+(.&&.) :: (Monad m) => m ExitCode -> m ExitCode -> m ExitCode
+m1 .&&. m2 = do ec1 <- m1
+                case ec1 of
+                  ExitSuccess -> m2
+                  _           -> return ec1
+
+infixr 3 .&&.
+
+allSuccess :: (Monad m, Foldable t) => t (m ExitCode) -> m ExitCode
+allSuccess = foldr (.&&.) (return ExitSuccess)
 
 -- | Monad version of 'all', aborts the computation at the first @False@ value
 allM :: Monad m => (a -> m Bool) -> [a] -> m Bool

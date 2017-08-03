@@ -17,6 +17,7 @@ import Data.List        (isPrefixOf)
 import Data.Maybe       (maybeToList)
 import Data.Tagged      (Tagged)
 import System.Directory (doesDirectoryExist, getCurrentDirectory)
+import System.Exit      (ExitCode)
 import System.FilePath  (dropTrailingPathSeparator, normalise, (</>))
 
 --------------------------------------------------------------------------------
@@ -58,15 +59,15 @@ instance BuildTool Stack where
   commandBench = commandArg "bench"
 
 commandArgTarget :: String -> GlobalEnv -> Tagged Stack CommandPath
-                    -> Maybe (Tagged Stack ProjectTarget) -> IO Bool
+                    -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
 commandArgTarget arg _env cmd mt = tryRun (stripTag cmd) args
   where
     args = arg : maybeToList (fmap stripTag mt)
 
 commandArg :: String -> GlobalEnv -> Tagged Stack CommandPath
-              -> IO Bool
+              -> IO ExitCode
 commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> GlobalEnv -> Tagged Stack CommandPath
-               -> IO Bool
+               -> IO ExitCode
 commandArgs args _env cmd = tryRun (stripTag cmd) args
