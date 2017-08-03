@@ -68,11 +68,18 @@ data Installed = Installed
 --   it's contained in the first line of the output of @command
 --   --version@.
 tryFindVersion :: FilePath -> IO (Maybe Version)
-tryFindVersion cmd =
+tryFindVersion = tryFindVersionBy findVersion
+  where
+    findVersion str = takeVersion (dropWhile (not . isDigit) str)
+
+-- | If we're at the start of a Version, take all of it.
+takeVersion :: String -> String
+takeVersion = takeWhile (liftA2 (||) isDigit (=='.'))
+
+tryFindVersionBy :: (String -> String) -> FilePath -> IO (Maybe Version)
+tryFindVersionBy findVersion cmd =
   fmap (>>= parseVer) (tryRunOutput cmd ["--version"])
   where
-    findVersion str = takeWhile (liftA2 (||) isDigit (=='.')) (dropWhile (not . isDigit) str)
-
     parseVer ver = case readP_to_S (parseVersion <* eof) (findVersion ver) of
                      [(v,"")] -> Just v
                      _        -> Nothing

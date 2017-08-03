@@ -16,6 +16,7 @@ module JBI.Tagged
   , stripTag
     -- * Re-export
   , Tagged (..)
+  , proxy
   ) where
 
 import Data.Coerce (Coercible, coerce)
