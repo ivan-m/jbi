@@ -11,7 +11,7 @@
  -}
 module JBI.Commands.Stack where
 
-import JBI.Commands.Common
+import JBI.Commands.BuildTool
 
 import Data.List        (isPrefixOf)
 import Data.Maybe       (maybeToList)

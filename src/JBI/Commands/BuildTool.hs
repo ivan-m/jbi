@@ -11,7 +11,7 @@
 
 
  -}
-module JBI.Commands.Common where
+module JBI.Commands.BuildTool where
 
 import Control.Applicative          (liftA2)
 import Data.Char                    (isDigit)
