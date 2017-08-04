@@ -25,7 +25,7 @@ library
   -- other-extensions:
   build-depends:       base >=4.9 && <4.10
                      , aeson
-                     , directory
+                     , directory >= 1.2.5.0
                      , filepath
                      , process
                      , tagged
