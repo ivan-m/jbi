@@ -16,9 +16,11 @@ import JBI.Commands.Tool
 import JBI.Environment.Global
 import JBI.Tagged
 
-import Control.Monad (forM)
-import Data.String   (IsString(..))
-import System.Exit   (ExitCode)
+import Control.Applicative (liftA2)
+import Control.Monad       (forM)
+import Data.Maybe          (isJust)
+import Data.String         (IsString(..))
+import System.Exit         (ExitCode)
 
 --------------------------------------------------------------------------------
 
@@ -70,20 +72,38 @@ class (Tool bt) => BuildTool bt where
   -- | Assumes 'commandProjectRoot' is 'Just'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-data BuildStatus bt = BuildStatus
-  { usable           :: !Bool
-  , projectRoot      :: !(Tagged bt ProjectRoot)
+data BuildUsage bt = BuildUsage
+  { installation :: !(Installed bt)
+  , usable       :: !Bool
+  , project      :: !(Maybe (BuildProject bt))
+  } deriving (Eq, Show, Read)
+
+data BuildProject bt = BuildProject
+  { projectRoot      :: !(Tagged bt ProjectRoot)
   , artifactsPresent :: !Bool
   } deriving (Eq, Show, Read)
 
-commandBuildStatus :: (BuildTool bt) => GlobalEnv
-                      -> Installed bt
-                      -> IO (Maybe (BuildStatus bt))
-commandBuildStatus env info = do
-  usbl  <- canUseCommand env info
-  mroot <- commandProjectRoot (path info)
+-- | A 'Nothing' indicates that this tool cannot be used for this
+--   project (i.e. needs configuration).
+commandBuildUsage :: (BuildTool bt)
+                     => GlobalEnv
+                     -> IO (Maybe (BuildUsage bt))
+commandBuildUsage env = do
+  mInst <- commandInformation
+  forM mInst $ \inst ->
+    BuildUsage inst <$> canUseCommand env inst
+                    <*> commandBuildProject (path inst)
+
+
+commandBuildProject :: (BuildTool bt) => Tagged bt CommandPath
+                       -> IO (Maybe (BuildProject bt))
+commandBuildProject cmd = do
+  mroot <- commandProjectRoot cmd
   forM mroot $ \root ->
-    BuildStatus usbl root <$> hasBuildArtifacts root
+    BuildProject root <$> hasBuildArtifacts root
+
+canUseBuildTool :: BuildUsage bt -> Bool
+canUseBuildTool = liftA2 (&&) usable (isJust . project)
 
 --------------------------------------------------------------------------------
 
