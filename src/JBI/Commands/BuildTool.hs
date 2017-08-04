@@ -26,6 +26,9 @@ import System.Exit         (ExitCode)
 
 class (Tool bt) => BuildTool bt where
 
+  prettyName :: proxy bt -> String
+  prettyName = nameOfCommand . proxy commandName
+
   -- | Make sure there's nothing in the environment preventing us from
   --   using this tool.
   --
