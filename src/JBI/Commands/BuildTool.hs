@@ -25,6 +25,13 @@ import System.Exit   (ExitCode)
 
 class (Tool bt) => BuildTool bt where
 
+  -- | Make sure there's nothing in the environment preventing us from
+  --   using this tool.
+  --
+  --   For example, a minimum version, need another tool installed, etc.
+  canUseCommand :: GlobalEnv -> Installed bt -> IO Bool
+  canUseCommand _ _ = return True
+
   -- | Try and determine the root directory for this project.
   commandProjectRoot :: Tagged bt CommandPath -> IO (Maybe (Tagged bt ProjectRoot))
 
@@ -64,17 +71,20 @@ class (Tool bt) => BuildTool bt where
   -- | Assumes 'commandProjectRoot' is 'Just'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-data BuildUsage bt = BuildUsage
-  { projectRoot      :: !(Tagged bt ProjectRoot)
+data BuildStatus bt = BuildStatus
+  { usable           :: !Bool
+  , projectRoot      :: !(Tagged bt ProjectRoot)
   , artifactsPresent :: !Bool
   } deriving (Eq, Show, Read)
 
-commandBuildUsage :: (BuildTool bt) => Tagged bt CommandPath
-                           -> IO (Maybe (BuildUsage bt))
-commandBuildUsage cmd = do
-  mroot <- commandProjectRoot cmd
+commandBuildStatus :: (BuildTool bt) => GlobalEnv
+                      -> Installed bt
+                      -> IO (Maybe (BuildStatus bt))
+commandBuildStatus env info = do
+  usbl  <- canUseCommand env info
+  mroot <- commandProjectRoot (path info)
   forM mroot $ \root ->
-    BuildUsage root <$> hasBuildArtifacts root
+    BuildStatus usbl root <$> hasBuildArtifacts root
 
 --------------------------------------------------------------------------------
 
