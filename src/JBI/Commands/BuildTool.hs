@@ -1,5 +1,4 @@
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, KindSignatures,
-             MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts, MultiParamTypeClasses #-}
 
 {- |
    Module      : JBI.Commands.Common
