@@ -17,8 +17,9 @@ import JBI.Commands.Tool
 import JBI.Environment.Global
 import JBI.Tagged
 
-import Data.String (IsString(..))
-import System.Exit (ExitCode)
+import Control.Monad (forM)
+import Data.String   (IsString(..))
+import System.Exit   (ExitCode)
 
 --------------------------------------------------------------------------------
 
@@ -62,6 +63,18 @@ class (Tool bt) => BuildTool bt where
 
   -- | Assumes 'commandProjectRoot' is 'Just'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
+
+data BuildUsage bt = BuildUsage
+  { projectRoot      :: !(Tagged bt ProjectRoot)
+  , artifactsPresent :: !Bool
+  } deriving (Eq, Show, Read)
+
+commandBuildUsage :: (BuildTool bt) => Tagged bt CommandPath
+                           -> IO (Maybe (BuildUsage bt))
+commandBuildUsage cmd = do
+  mroot <- commandProjectRoot cmd
+  forM mroot $ \root ->
+    BuildUsage root <$> hasBuildArtifacts root
 
 --------------------------------------------------------------------------------
 
