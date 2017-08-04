@@ -102,8 +102,8 @@ commandBuildProject cmd = do
   forM mroot $ \root ->
     BuildProject root <$> hasBuildArtifacts root
 
-canUseBuildTool :: BuildUsage bt -> Bool
-canUseBuildTool = liftA2 (&&) usable (isJust . project)
+canUseBuildTool :: Maybe (BuildUsage bt) -> Bool
+canUseBuildTool = maybe False (liftA2 (&&) usable (isJust . project))
 
 --------------------------------------------------------------------------------
 
