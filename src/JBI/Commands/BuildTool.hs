@@ -72,6 +72,23 @@ class (Tool bt) => BuildTool bt where
   -- | Assumes 'canUseBuildTool'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
+  -- | Update index of available packages.
+  --
+  --   Assumes 'canUseBuildTool'.
+  commandUpdate :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
+
+  -- | Run an external command within this environment.
+  --
+  --   Assumes 'canUseBuildTool'.
+  commandExec :: GlobalEnv -> Tagged bt CommandPath -> String -> Args -> IO ExitCode
+
+  -- | Run an executable component within this environment (building
+  --   it first if required).
+  --
+  --   Assumes 'canUseBuildTool'.
+  commandRun :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectTarget
+                -> Args -> IO ExitCode
+
 data BuildUsage bt = BuildUsage
   { installation :: !(Installed bt)
   , usable       :: !Bool

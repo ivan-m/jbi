@@ -64,6 +64,19 @@ instance BuildTool Stack where
 
   commandBench = commandArg "bench"
 
+  commandUpdate = commandArg "update"
+
+  commandExec env cmd prog progArgs = commandArgs args env cmd
+    where
+      args = "exec" : prog : "--" : progArgs
+
+  -- Stack doesn't have a "run" equivalent; see under \"component\"
+  -- here:
+  -- https://docs.haskellstack.org/en/stable/build_command/#target-syntax
+  commandRun env cmd prog progArgs =
+    commandBuild env cmd (Just prog)
+    .&&. commandExec env cmd (stripTag prog) progArgs
+
 commandArgTarget :: String -> GlobalEnv -> Tagged Stack CommandPath
                     -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
 commandArgTarget arg env cmd mt = commandArgs args env cmd
