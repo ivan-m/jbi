@@ -20,7 +20,7 @@ import Control.Exception (SomeException(SomeException), handle)
 import Control.Monad     (filterM)
 import System.Directory  (doesFileExist, getCurrentDirectory, listDirectory)
 import System.FilePath   (dropTrailingPathSeparator, isDrive, takeDirectory,
-                          (</>))
+                          takeExtension, (</>))
 
 --------------------------------------------------------------------------------
 
@@ -32,6 +32,12 @@ instance Tool (Cabal mode) where
 class CabalMode mode where
   cabalProjectRoot :: Tagged (Cabal mode) CommandPath
                       -> IO (Maybe (Tagged (Cabal mode) ProjectRoot))
+  cabalProjectRoot = withTaggedF go
+    where
+      -- Type signature needed to make withTaggedF happy, though we
+      -- don't actually use the command itself for this.
+      go :: FilePath -> IO (Maybe FilePath)
+      go _ = recurseUpFindFile ((== ".cabal") . takeExtension)
 
 --------------------------------------------------------------------------------
 
