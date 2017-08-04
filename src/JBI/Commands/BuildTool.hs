@@ -52,24 +52,24 @@ class (Tool bt) => BuildTool bt where
 
   commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
-  -- | Assumes 'commandProjectRoot' is 'Just'.
+  -- | Assumes 'canUseBuildTool'.
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                   -> IO ExitCode
 
-  -- | Assumes 'commandProjectRoot' is 'Just'.
+  -- | Assumes 'canUseBuildTool'.
   commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                  -> IO ExitCode
 
   -- | Remove /all/ build artifacts of using this build tool (that is,
   --   afterwards 'hasBuildArtifacts' should return 'False').
   --
-  --   Assumes 'commandProjectRoot' is 'Just'.
+  --   Assumes 'canUseBuildTool'.
   commandClean :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-  -- | Assumes 'commandProjectRoot' is 'Just'.
+  -- | Assumes 'canUseBuildTool'.
   commandTest :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-  -- | Assumes 'commandProjectRoot' is 'Just'.
+  -- | Assumes 'canUseBuildTool'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
 data BuildUsage bt = BuildUsage
