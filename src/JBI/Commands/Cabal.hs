@@ -20,6 +20,7 @@ import JBI.Tagged
 import Control.Exception (SomeException(SomeException), handle)
 import Control.Monad     (filterM)
 import Data.Maybe        (isJust)
+import Data.Proxy        (Proxy(Proxy))
 import System.Directory  (doesDirectoryExist, doesFileExist,
                           getCurrentDirectory, listDirectory)
 import System.Exit       (ExitCode)
@@ -47,8 +48,43 @@ data Cabal mode
 instance Tool (Cabal mode) where
   commandName = "cabal"
 
+instance (CabalMode mode) => BuildTool (Cabal mode) where
+  canUseCommand = canUseMode
+
+  commandProjectRoot = cabalProjectRoot
+
+  hasBuildArtifacts = hasModeArtifacts
+
+  commandPrepare = cabalPrepare
+
+  commandTargets = cabalTargets
+
+  commandBuild = cabalBuild
+
+  commandRepl = cabalRepl
+
+  commandClean = cabalClean
+
+  commandTest = cabalTest
+
+  commandBench = cabalBench
+
+  commandExec = cabalExec
+
+  commandRun = cabalRun
+
+  commandUpdate = cabalUpdate
+
+instance (CabalMode mode) => NamedTool (Cabal mode) where
+  prettyName p = "cabal+" ++ modeName (getMode p)
+
+getMode :: proxy (Cabal mode) -> Proxy mode
+getMode _ = Proxy
+
 class CabalMode mode where
   modeName :: proxy mode -> String
+
+  canUseMode :: GlobalEnv -> Installed (Cabal mode) -> IO Bool
 
   cabalProjectRoot :: Tagged (Cabal mode) CommandPath
                       -> IO (Maybe (Tagged (Cabal mode) ProjectRoot))
@@ -68,6 +104,28 @@ class CabalMode mode where
                   -> Tagged (Cabal mode) ProjectRoot
                   -> IO [Tagged (Cabal mode) ProjectTarget]
   cabalTargets = const (withTaggedF cabalFileComponents)
+
+  -- | This is an additional function than found in 'BuildTool'
+  cabalConfigure :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+
+  cabalBuild :: GlobalEnv -> Tagged (Cabal mode) CommandPath
+                  -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+
+  cabalRepl :: GlobalEnv -> Tagged (Cabal mode) CommandPath
+               -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+
+  cabalClean :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+
+  cabalTest :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+
+  cabalBench :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+
+  cabalExec :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> String -> Args -> IO ExitCode
+
+  cabalRun :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> Tagged (Cabal mode) ProjectTarget
+              -> Args -> IO ExitCode
+
+  cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
 -- | Not made part of default call in case cabal-new does something
 --   different.
