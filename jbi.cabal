@@ -25,6 +25,7 @@ library
   -- other-extensions:
   build-depends:       base >=4.9 && <4.10
                      , aeson
+                     , Cabal
                      , directory >= 1.2.5.0
                      , filepath
                      , process
