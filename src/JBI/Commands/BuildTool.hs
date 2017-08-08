@@ -73,11 +73,6 @@ class (Tool bt) => BuildTool bt where
   -- | Assumes 'canUseBuildTool'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-  -- | Update index of available packages.
-  --
-  --   Assumes 'canUseBuildTool'.
-  commandUpdate :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
-
   -- | Run an external command within this environment.
   --
   --   Assumes 'canUseBuildTool'.
@@ -89,6 +84,9 @@ class (Tool bt) => BuildTool bt where
   --   Assumes 'canUseBuildTool'.
   commandRun :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectTarget
                 -> Args -> IO ExitCode
+
+  -- | Update index of available packages.
+  commandUpdate :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
 -- | This class exists because of:
 --

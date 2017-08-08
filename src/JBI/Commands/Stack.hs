@@ -64,8 +64,6 @@ instance BuildTool Stack where
 
   commandBench = commandArg "bench"
 
-  commandUpdate = commandArg "update"
-
   commandExec env cmd prog progArgs = commandArgs args env cmd
     where
       args = "exec" : prog : "--" : progArgs
@@ -76,6 +74,8 @@ instance BuildTool Stack where
   commandRun env cmd prog progArgs =
     commandBuild env cmd (Just prog)
     .&&. commandExec env cmd (componentName prog) progArgs
+
+  commandUpdate = commandArg "update"
 
 instance NamedTool Stack
 
