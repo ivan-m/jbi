@@ -50,7 +50,8 @@ class (Tool bt) => BuildTool bt where
   commandPrepare :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectRoot
                     -> IO ExitCode
 
-  commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
+  commandTargets :: Tagged bt CommandPath -> Tagged bt ProjectRoot
+                    -> IO [Tagged bt ProjectTarget]
 
   -- | Assumes 'canUseBuildTool'.
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
