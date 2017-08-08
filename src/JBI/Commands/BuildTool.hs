@@ -53,35 +53,35 @@ class (Tool bt) => BuildTool bt where
   commandTargets :: Tagged bt CommandPath -> Tagged bt ProjectRoot
                     -> IO [Tagged bt ProjectTarget]
 
-  -- | Assumes 'canUseBuildTool'.
+  -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                   -> IO ExitCode
 
-  -- | Assumes 'canUseBuildTool'.
+  -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                  -> IO ExitCode
 
   -- | Remove /all/ build artifacts of using this build tool (that is,
   --   afterwards 'hasBuildArtifacts' should return 'False').
   --
-  --   Assumes 'canUseBuildTool'.
+  --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandClean :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-  -- | Assumes 'canUseBuildTool'.
+  -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandTest :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-  -- | Assumes 'canUseBuildTool'.
+  -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandBench :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Run an external command within this environment.
   --
-  --   Assumes 'canUseBuildTool'.
+  --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandExec :: GlobalEnv -> Tagged bt CommandPath -> String -> Args -> IO ExitCode
 
   -- | Run an executable component within this environment (building
   --   it first if required).
   --
-  --   Assumes 'canUseBuildTool'.
+  --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandRun :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectTarget
                 -> Args -> IO ExitCode
 
