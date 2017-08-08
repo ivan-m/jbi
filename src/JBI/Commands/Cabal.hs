@@ -19,6 +19,7 @@ import JBI.Tagged
 import Control.Exception (SomeException(SomeException), handle)
 import Control.Monad     (filterM)
 import System.Directory  (doesFileExist, getCurrentDirectory, listDirectory)
+import System.Exit       (ExitCode)
 import System.FilePath   (dropTrailingPathSeparator, isDrive, takeDirectory,
                           takeExtension, (</>))
 
@@ -38,6 +39,12 @@ class CabalMode mode where
       -- don't actually use the command itself for this.
       go :: FilePath -> IO (Maybe FilePath)
       go _ = recurseUpFindFile ((== ".cabal") . takeExtension)
+
+  hasModeArtifacts :: Tagged (Cabal mode) ProjectRoot -> IO Bool
+
+  cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath
+                  -> Tagged (Cabal mode) ProjectRoot -> IO ExitCode
+
 
 --------------------------------------------------------------------------------
 
