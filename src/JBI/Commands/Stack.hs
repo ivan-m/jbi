@@ -77,6 +77,8 @@ instance BuildTool Stack where
     commandBuild env cmd (Just prog)
     .&&. commandExec env cmd (componentName prog) progArgs
 
+instance NamedTool Stack
+
 commandArgTarget :: String -> GlobalEnv -> Tagged Stack CommandPath
                     -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
 commandArgTarget arg env cmd mt = commandArgs args env cmd

@@ -26,9 +26,6 @@ import System.Exit         (ExitCode)
 
 class (Tool bt) => BuildTool bt where
 
-  prettyName :: proxy bt -> String
-  prettyName = nameOfCommand . proxy commandName
-
   -- | Make sure there's nothing in the environment preventing us from
   --   using this tool.
   --
@@ -91,6 +88,16 @@ class (Tool bt) => BuildTool bt where
   --   Assumes 'canUseBuildTool'.
   commandRun :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectTarget
                 -> Args -> IO ExitCode
+
+-- | This class exists because of:
+--
+--   a) Distinguish the different Cabal variants
+--
+--   b) Be able to use a wrapper GADT that takes a @proxy bt@ and can
+--      be an instance of 'BuildTool' but not this.
+class (BuildTool bt) => NamedTool bt where
+  prettyName :: proxy bt -> String
+  prettyName = nameOfCommand . proxy commandName
 
 data BuildUsage bt = BuildUsage
   { installation :: !(Installed bt)
