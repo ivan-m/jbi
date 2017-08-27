@@ -125,6 +125,32 @@ m1 .&&. m2 = do ec1 <- m1
 
 infixr 3 .&&.
 
+(.||.) :: (Monad m) => m ExitCode -> m ExitCode -> m ExitCode
+m1 .||. m2 = do ec1 <- m1
+                case ec1 of
+                  ExitSuccess -> return ec1
+                  _           -> m2
+
+infixr 2 .||.
+
+tryCommand :: String -> IO ExitCode -> IO ExitCode -> IO ExitCode
+tryCommand msg tryWith run = run .||. tryAgain
+  where
+    tryAgain = do
+      putStrLn (makeBox msg)
+      tryWith .&&. run
+
+makeBox :: String -> String
+makeBox msg = unlines [ border
+                      , "* " ++ msg ++ " *"
+                      , border
+                      ]
+  where
+    msgLen = length msg
+    boxLen = msgLen + 4 -- asterisk + space on either side
+
+    border = replicate boxLen '*'
+
 allSuccess :: (Monad m, Foldable t) => t (m ExitCode) -> m ExitCode
 allSuccess = foldr (.&&.) (return ExitSuccess)
 

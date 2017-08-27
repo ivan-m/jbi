@@ -17,15 +17,16 @@ import JBI.Commands.Tool
 import JBI.Environment.Global
 import JBI.Tagged
 
-import Control.Exception (SomeException(SomeException), handle)
-import Control.Monad     (filterM)
-import Data.Maybe        (isJust)
-import Data.Proxy        (Proxy(Proxy))
-import System.Directory  (doesDirectoryExist, doesFileExist,
-                          getCurrentDirectory, listDirectory)
-import System.Exit       (ExitCode)
-import System.FilePath   (dropTrailingPathSeparator, isDrive, takeDirectory,
-                          takeExtension, (</>))
+import Control.Applicative (liftA2, (<*>))
+import Control.Exception   (SomeException(SomeException), handle)
+import Control.Monad       (filterM)
+import Data.Maybe          (isJust)
+import Data.Proxy          (Proxy(Proxy))
+import System.Directory    (doesDirectoryExist, doesFileExist,
+                            getCurrentDirectory, listDirectory)
+import System.Exit         (ExitCode)
+import System.FilePath     (dropTrailingPathSeparator, isDrive, takeDirectory,
+                            takeExtension, (</>))
 
 import qualified Distribution.Package                  as CPkg
 import           Distribution.PackageDescription       (GenericPackageDescription,
@@ -59,21 +60,26 @@ instance (CabalMode mode) => BuildTool (Cabal mode) where
 
   commandTargets = cabalTargets
 
-  commandBuild = cabalBuild
+  commandBuild env cmd = cabalTry env cmd . cabalBuild env cmd
 
-  commandRepl = cabalRepl
+  commandRepl env cmd = cabalTry env cmd . cabalRepl env cmd
 
   commandClean = cabalClean
 
-  commandTest = cabalTest
+  commandTest = liftA2 (<*>) cabalTry cabalTest
 
-  commandBench = cabalBench
+  commandBench = liftA2 (<*>) cabalTry cabalBench
 
   commandExec = cabalExec
 
-  commandRun = cabalRun
+  commandRun env cmd = (cabalTry env cmd .) . cabalRun env cmd
 
   commandUpdate = cabalUpdate
+
+cabalTry :: (CabalMode mode) => GlobalEnv -> Tagged (Cabal mode) CommandPath
+            -> IO ExitCode -> IO ExitCode
+cabalTry env cmd = tryCommand "Command failed, trying to re-configure"
+                              (cabalConfigure env cmd)
 
 instance (CabalMode mode) => NamedTool (Cabal mode) where
   prettyName p = "cabal+" ++ modeName (getMode p)
@@ -105,7 +111,8 @@ class CabalMode mode where
                   -> IO [Tagged (Cabal mode) ProjectTarget]
   cabalTargets = const (withTaggedF cabalFileComponents)
 
-  -- | This is an additional function than found in 'BuildTool'
+  -- | This is an additional function than found in 'BuildTool'.  May
+  --   include installing dependencies.
   cabalConfigure :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalBuild :: GlobalEnv -> Tagged (Cabal mode) CommandPath
