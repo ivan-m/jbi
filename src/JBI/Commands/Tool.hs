@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {- |
    Module      : JBI.Commands.Tool
    Description : Common tooling commands
@@ -40,6 +41,11 @@ commandInformation = commandPath >>= mapM getVersion
   where
     getVersion :: (Tool t') => Tagged t' CommandPath -> IO (Installed t')
     getVersion tcp = Installed tcp <$> commandVersion tcp
+
+data GHC
+
+instance Tool GHC where
+  commandName = "ghc"
 
 --------------------------------------------------------------------------------
 

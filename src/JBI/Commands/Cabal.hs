@@ -50,7 +50,7 @@ instance Tool (Cabal mode) where
   commandName = "cabal"
 
 instance (CabalMode mode) => BuildTool (Cabal mode) where
-  canUseCommand = canUseMode
+  canUseCommand env inst = (isJust (ghc env) &&) <$> canUseMode env inst
 
   commandProjectRoot = cabalProjectRoot
 

@@ -13,9 +13,11 @@
 module JBI.Environment.Global where
 
 import JBI.Commands.Nix
+import JBI.Commands.Tool
 
 --------------------------------------------------------------------------------
 
-newtype GlobalEnv = GlobalEnv
+data GlobalEnv = GlobalEnv
   { nix :: NixSupport
+  , ghc :: Maybe (Installed GHC)
   } deriving (Eq, Show, Read)
