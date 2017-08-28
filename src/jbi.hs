@@ -49,7 +49,7 @@ versionInfo :: String
 versionInfo = "jbi " ++ showVersion version ++ " - Just Build It and Hack On!"
 
 parseCommand :: Parser Command
-parseCommand = (subparser . mconcat $
+parseCommand = (hsubparser . mconcat $
   [ command "prepare" (info (pure Prepare)
                             (progDesc "Initialise the tool; usually not needed, \
                                       \but will (re-)generate the `shell.nix` for `cabal+nix`."))
