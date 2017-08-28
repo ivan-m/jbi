@@ -50,7 +50,7 @@ instance BuildTool Stack where
 
   commandPrepare = commandArgs ["build", "--dry-run"]
 
-  commandTargets = const . withTaggedF go
+  commandTargets = withTaggedF go
     where
       go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]
 

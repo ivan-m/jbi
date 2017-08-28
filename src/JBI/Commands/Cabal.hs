@@ -113,9 +113,12 @@ class CabalMode mode where
   cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalTargets :: Tagged (Cabal mode) CommandPath
-                  -> Tagged (Cabal mode) ProjectRoot
                   -> IO [Tagged (Cabal mode) ProjectTarget]
-  cabalTargets = const (withTaggedF cabalFileComponents)
+  cabalTargets = withTaggedF go
+    where
+      -- Make withTaggedF happy
+      go :: FilePath -> IO [String]
+      go _ = cabalFileComponents
 
   -- | This is an additional function than found in 'BuildTool'.  May
   --   include installing dependencies.
@@ -247,9 +250,10 @@ isCabalFile = ((== ".cabal") . takeExtension)
 --------------------------------------------------------------------------------
 -- The Cabal library likes to really keep changing things...
 
-cabalFileComponents :: FilePath -> IO [String]
-cabalFileComponents root = do
-  cntns <- map (root </>) <$> listDirectory root
+cabalFileComponents :: IO [String]
+cabalFileComponents = do
+  dir   <- getCurrentDirectory
+  cntns <- map (dir </>) <$> listDirectory dir
   files <- filterM doesFileExist cntns
   let cabalFiles = filter isCabalFile files
   case cabalFiles of

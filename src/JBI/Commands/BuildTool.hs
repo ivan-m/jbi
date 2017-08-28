@@ -51,8 +51,8 @@ class (Tool bt) => BuildTool bt where
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandPrepare :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
-  commandTargets :: Tagged bt CommandPath -> Tagged bt ProjectRoot
-                    -> IO [Tagged bt ProjectTarget]
+  -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
+  commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
