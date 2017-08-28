@@ -41,6 +41,7 @@ executable jbi
 
   build-depends:       jbi
                      , base
+                     , groom
                      , optparse-applicative
 
   hs-source-dirs:      src

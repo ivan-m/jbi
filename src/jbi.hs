@@ -15,10 +15,12 @@ import JBI.Commands.BuildTool (ProjectTarget(..))
 import JBI.Commands.Tool      (Args)
 import Paths_jbi              (version)
 
+import Data.List           (intercalate)
 import Data.Monoid         (mconcat, (<>))
 import Data.Version        (showVersion)
 import Options.Applicative
 import System.Exit         (ExitCode(ExitSuccess), die, exitWith)
+import Text.Groom          (groom)
 
 --------------------------------------------------------------------------------
 
@@ -37,7 +39,13 @@ data Command = Prepare
              | Exec String Args
              | Run ProjectTarget Args
              | Update
+             | Info InfoType
   deriving (Eq, Show, Read)
+
+data InfoType = AvailableTools
+              | ChosenTool
+              | Detailed
+              deriving (Eq, Show, Read)
 
 parser :: ParserInfo Command
 parser = info (helper <*> parseCommand) $
@@ -71,6 +79,8 @@ parseCommand = (hsubparser . mconcat $
                             (progDesc "Run the specified executable target within the build environment."))
   , command "update"  (info (pure Update)
                             (progDesc "Update the package index (usually not needed)."))
+  , command "info"    (info (Info <$> parseInfo)
+                            (progDesc "Build tool information; useful for debugging."))
   ])
   <|> pure (Build Nothing)
 
@@ -89,26 +99,53 @@ parseArgs = many (argument str (   metavar "ARG"
                                 <> help "Optional arguments to pass through to the command"
                                ))
 
+parseInfo :: Parser InfoType
+parseInfo = helper <*> (hsubparser . mconcat $
+  [ command "tools"   (info (pure AvailableTools)
+                            (progDesc "Print all known build tools."))
+  , command "chosen"  (info (pure ChosenTool)
+                            (progDesc "Print the build tool chosen."))
+  , command "details" (info (pure Detailed)
+                            (progDesc "Print detailed information about build tools."))
+  ])
+
 --------------------------------------------------------------------------------
 
 runCommand :: [WrappedTool proxy] -> Command -> IO ()
 runCommand tools cmd = do
-  ec <- tooled $
-    case cmd of
-      Prepare       -> prepare
-      Targets       -> printTargets
-      Build mt      -> build mt
-      REPL mt       -> repl mt
-      Clean         -> clean
-      Test          -> test
-      Bench         -> bench
-      Exec exe args -> exec exe args
-      Run exe args  -> run exe args
-      Update        -> update
+  ec <- case cmd of
+          Prepare       -> tooled prepare
+          Build mt      -> tooled (build mt)
+          REPL mt       -> tooled (repl mt)
+          Clean         -> tooled clean
+          Test          -> tooled test
+          Bench         -> tooled bench
+          Exec exe args -> tooled (exec exe args)
+          Run exe args  -> tooled (run exe args)
+          Update        -> tooled update
+          Targets       -> printSuccess printTargets
+          Info it       -> printSuccess (printInfo it)
   exitWith ec
   where
-    tooled f = withTool (die "No possible tool found.") f tools
+    tooled :: (GlobalEnv -> WrappedTool Valid -> IO a) -> IO a
+    tooled f = withTool toolFail f tools
 
-    printTargets _ wv = do tgts <- targets wv
-                           mapM_ (putStrLn . projectTarget) tgts
-                           return ExitSuccess
+    toolFail :: IO a
+    toolFail = die "No possible tool found."
+
+    printSuccess act = do out <- act
+                          putStrLn out
+                          return ExitSuccess
+
+    printTargets = tooled (const (fmap (multiLine . map projectTarget) . targets))
+
+    printInfo AvailableTools = return . multiLine . map toolName $ tools
+    printInfo ChosenTool     = do env <- globalEnv
+                                  mTool <- chooseTool env tools
+                                  maybe toolFail (return . toolName) mTool
+    printInfo Detailed       = groom <$> getInformation tools
+                               -- This is pretty ugly... but will suffice for now.
+
+-- Unline unlines, this doesn't add a trailing newline.
+multiLine :: [String] -> String
+multiLine = intercalate "\n"

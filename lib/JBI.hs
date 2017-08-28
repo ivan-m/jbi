@@ -10,9 +10,11 @@
  -}
 module JBI
   ( WrappedTool
+  , Valid
   , defaultTools
   , withTool
   , chooseTool
+  , toolName
     -- * System state\/environment
   , GlobalEnv(..)
   , globalEnv
