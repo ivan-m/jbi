@@ -13,7 +13,7 @@
 module JBI.Commands.BuildTool where
 
 import JBI.Commands.Tool
-import JBI.Environment.Global
+import JBI.Environment
 import JBI.Tagged
 
 import Control.Applicative (liftA2)

@@ -29,7 +29,7 @@ module JBI.Commands
 
 import JBI.Commands.BuildTool
 import JBI.Commands.Tool
-import JBI.Environment.Global
+import JBI.Environment
 import JBI.Tagged
 
 import Control.Monad    (forM)

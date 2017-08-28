@@ -20,7 +20,7 @@ module JBI.Commands.Cabal
 import JBI.Commands.BuildTool
 import JBI.Commands.Nix
 import JBI.Commands.Tool
-import JBI.Environment.Global
+import JBI.Environment
 import JBI.Tagged
 
 import Control.Applicative (liftA2, (<*>))

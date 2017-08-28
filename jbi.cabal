@@ -19,7 +19,7 @@ library
                      , JBI.Commands.Nix
                      , JBI.Commands.Stack
                      , JBI.Commands.Tool
-                     , JBI.Environment.Global
+                     , JBI.Environment
                      , JBI.Tagged
   -- other-modules:
   -- other-extensions:

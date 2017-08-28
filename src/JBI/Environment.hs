@@ -1,5 +1,5 @@
 {- |
-   Module      : JBI.Environment.Global
+   Module      : JBI.Environment
    Description : Build tool agnostic environment
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -10,7 +10,7 @@
    working directories, etc.).
 
  -}
-module JBI.Environment.Global where
+module JBI.Environment where
 
 import JBI.Commands.Nix
 import JBI.Commands.Tool

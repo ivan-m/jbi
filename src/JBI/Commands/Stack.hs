@@ -13,7 +13,7 @@ module JBI.Commands.Stack (Stack) where
 
 import JBI.Commands.BuildTool
 import JBI.Commands.Tool
-import JBI.Environment.Global
+import JBI.Environment
 import JBI.Tagged
 
 import Data.List        (isPrefixOf, span)
