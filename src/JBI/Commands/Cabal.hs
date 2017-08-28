@@ -102,7 +102,6 @@ class CabalMode mode where
       go _ = recurseUpFindFile isCabalFile
 
   hasModeArtifacts :: Tagged (Cabal mode) ProjectRoot -> IO Bool
-  hasModeArtifacts = hasCabalDist
 
   cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
@@ -145,7 +144,7 @@ class CabalMode mode where
   cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalUpdate = commandArg "update"
 
--- | Not made part of default 'BuildTool' instance in case cabal-new
+-- | Not made part of default instance in case cabal-new
 --   does something different.
 hasCabalDist :: Tagged (Cabal mode) ProjectRoot -> IO Bool
 hasCabalDist pr = doesDirectoryExist (stripTag pr </> "dist")
@@ -159,8 +158,7 @@ instance CabalMode Sandbox where
 
   canUseMode _ _ = return True -- TODO: lower version bound
 
-  hasModeArtifacts pr = liftA2 (&&) (hasCabalDist pr)
-                                    (doesFileExist (stripTag pr </> "cabal.sandbox.config"))
+  hasModeArtifacts pr = doesFileExist (stripTag pr </> "cabal.sandbox.config")
 
   cabalPrepare = commandArgs ["sandbox", "init"]
 
@@ -181,6 +179,8 @@ instance CabalMode Sandbox where
       configure = commandArgs ["configure", "--enable-tests", "--enable-benchmarks"]
                               env cmd
 
+  -- Note: we don't treat "dist" as part of the tool artifacts, but it
+  -- doesn't make sense without the sandbox so remove it as well.
   cabalClean env cmd = commandArg "clean" env cmd
                        .&&. commandArgs ["sandbox", "delete"] env cmd
 
