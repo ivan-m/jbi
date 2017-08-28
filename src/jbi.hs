@@ -85,11 +85,9 @@ parseExecutable = strArgument (   metavar "COMMAND"
                               )
 
 parseArgs :: Parser Args
-parseArgs = argument (many str) (   value []
-                                 <> showDefaultWith (const "")
-                                 <> metavar "ARGS"
-                                 <> help "Optional arguments to pass through to the command"
-                                )
+parseArgs = many (argument str (   metavar "ARG"
+                                <> help "Optional arguments to pass through to the command"
+                               ))
 
 --------------------------------------------------------------------------------
 
