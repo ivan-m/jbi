@@ -152,7 +152,7 @@ instance IsString ProjectRoot where
   fromString = ProjectRoot
 
 -- | TODO: determine if this is a library, executable, test or benchmark component.
-newtype ProjectTarget = ProjectTarget { target :: String }
+newtype ProjectTarget = ProjectTarget { projectTarget :: String }
   deriving (Eq, Ord, Show, Read)
 
 instance IsString ProjectTarget where
