@@ -13,6 +13,7 @@
 module JBI.Commands.Cabal where
 
 import JBI.Commands.BuildTool
+import JBI.Commands.Nix
 import JBI.Commands.Tool
 import JBI.Environment.Global
 import JBI.Tagged
@@ -23,10 +24,11 @@ import Control.Monad       (filterM)
 import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
 import System.Directory    (doesDirectoryExist, doesFileExist,
-                            getCurrentDirectory, listDirectory)
-import System.Exit         (ExitCode)
+                            getCurrentDirectory, listDirectory, removeFile)
+import System.Exit         (ExitCode, die, exitSuccess)
 import System.FilePath     (dropTrailingPathSeparator, isDrive, takeDirectory,
                             takeExtension, (</>))
+import System.IO.Error     (ioError, isDoesNotExistError, tryIOError)
 
 import qualified Distribution.Package                  as CPkg
 import           Distribution.PackageDescription       (GenericPackageDescription,
@@ -183,6 +185,40 @@ instance CabalMode Sandbox where
   -- doesn't make sense without the sandbox so remove it as well.
   cabalClean env cmd = commandArg "clean" env cmd
                        .&&. commandArgs ["sandbox", "delete"] env cmd
+
+--------------------------------------------------------------------------------
+
+data Nix
+
+instance CabalMode Nix where
+  modeName _ = "nix"
+
+  canUseMode env _ = return (liftA2 (&&) (isJust . nixShell) (isJust . cabal2Nix) (nix env))
+
+  hasModeArtifacts pr = or <$> mapM (doesFileExist . (stripTag pr </>))
+                                    ["shell.nix", "default.nix"]
+
+  -- Note that commandPrepare is meant to be run within ProjectRoot
+  cabalPrepare env _ = case path <$> cabal2Nix (nix env) of
+                         Nothing  -> die "cabal2Nix required"
+                         Just c2n -> tryRunToFile "shell.nix" c2n ["--shell", "."]
+
+  cabalConfigure env _ = case path <$> nixShell (nix env) of
+                           Nothing -> die "nix-shell required"
+                           Just ns -> tryRun ns ["--run", "cabal configure --enable-tests --enable-benchmarks"]
+
+  cabalClean env cmd = commandArg "clean" env cmd
+                       .&&. rmFile "shell.nix"
+                       .&&. rmFile "default.nix"
+    where
+      rmFile file = do
+        rmStatus <- tryIOError (removeFile file)
+        case rmStatus of
+          -- We're guessing as to which file is the one being used
+          -- here, so an error because a file doesn't exist is OK;
+          -- anything else is serious and should be re-thrown.
+          Left err | not (isDoesNotExistError err) -> ioError err
+          _        -> exitSuccess
 
 --------------------------------------------------------------------------------
 

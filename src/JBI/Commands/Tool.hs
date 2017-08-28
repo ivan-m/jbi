@@ -20,9 +20,11 @@ import Data.String                  (IsString(..))
 import Data.Version                 (Version, parseVersion)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
-import System.Process               (CreateProcess(..), StdStream(Inherit),
-                                     proc, readProcessWithExitCode,
-                                     waitForProcess, withCreateProcess)
+import System.IO                    (IOMode(WriteMode), withFile)
+import System.Process               (CreateProcess(..),
+                                     StdStream(Inherit, UseHandle), proc,
+                                     readProcessWithExitCode, waitForProcess,
+                                     withCreateProcess)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 --------------------------------------------------------------------------------
@@ -115,6 +117,18 @@ tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
                           , std_out = Inherit
                           , std_err = Inherit
                           }
+
+tryRunToFile :: FilePath -> Tagged t CommandPath -> Args -> IO ExitCode
+tryRunToFile file cmd args = withFile file WriteMode $ \h ->
+                               withCreateProcess (cp h) $ \_ _ _ ph ->
+                                 waitForProcess ph
+  where
+    cmd' = stripTag cmd
+
+    cp h = (proc cmd' args) { std_in  = Inherit
+                            , std_out = UseHandle h
+                            , std_err = Inherit
+                            }
 
 -- | Equivalent to chaining all the calls with @&&@ in bash, etc.
 --
