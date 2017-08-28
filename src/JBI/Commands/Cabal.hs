@@ -10,7 +10,12 @@
 
 
  -}
-module JBI.Commands.Cabal where
+module JBI.Commands.Cabal
+  ( Cabal
+  , CabalMode
+  , Sandbox
+  , Nix
+  ) where
 
 import JBI.Commands.BuildTool
 import JBI.Commands.Nix

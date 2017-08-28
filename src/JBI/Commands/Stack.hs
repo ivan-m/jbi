@@ -9,7 +9,7 @@
 
 
  -}
-module JBI.Commands.Stack where
+module JBI.Commands.Stack (Stack) where
 
 import JBI.Commands.BuildTool
 import JBI.Commands.Tool
