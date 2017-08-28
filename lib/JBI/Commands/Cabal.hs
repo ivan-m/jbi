@@ -28,6 +28,7 @@ import Control.Exception   (SomeException(SomeException), handle)
 import Control.Monad       (filterM)
 import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
+import Data.Version        (makeVersion)
 import System.Directory    (doesFileExist, getCurrentDirectory, listDirectory,
                             removeFile)
 import System.Exit         (ExitCode, die, exitSuccess)
@@ -161,7 +162,7 @@ data Sandbox
 instance CabalMode Sandbox where
   modeName _ = "sandbox"
 
-  canUseMode _ _ = return True -- TODO: lower version bound
+  canUseMode _ inst = return (maybe True ((>= makeVersion [1,18]) . stripTag) (version inst))
 
   hasModeArtifacts pr = doesFileExist (stripTag pr </> "cabal.sandbox.config")
 
