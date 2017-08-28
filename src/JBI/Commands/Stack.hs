@@ -48,7 +48,7 @@ instance BuildTool Stack where
 
   hasBuildArtifacts dir = doesDirectoryExist (stripTag dir </> ".stack-work")
 
-  commandPrepare env cmd _pr = commandArgs ["build", "--dry-run"] env cmd
+  commandPrepare = commandArgs ["build", "--dry-run"]
 
   commandTargets = const . withTaggedF go
     where

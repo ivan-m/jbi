@@ -47,8 +47,9 @@ class (Tool bt) => BuildTool bt where
   --   init@ and create project configuration.
   --
   --   Some manual fiddling is allowed after this.
-  commandPrepare :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt ProjectRoot
-                    -> IO ExitCode
+  --
+  --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
+  commandPrepare :: GlobalEnv -> Tagged bt CommandPath -> IO ExitCode
 
   commandTargets :: Tagged bt CommandPath -> Tagged bt ProjectRoot
                     -> IO [Tagged bt ProjectTarget]

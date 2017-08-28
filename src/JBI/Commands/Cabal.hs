@@ -103,8 +103,7 @@ class CabalMode mode where
 
   hasModeArtifacts :: Tagged (Cabal mode) ProjectRoot -> IO Bool
 
-  cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath
-                  -> Tagged (Cabal mode) ProjectRoot -> IO ExitCode
+  cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalTargets :: Tagged (Cabal mode) CommandPath
                   -> Tagged (Cabal mode) ProjectRoot
