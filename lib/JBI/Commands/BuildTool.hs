@@ -18,6 +18,7 @@ import JBI.Tagged
 
 import Control.Applicative (liftA2)
 import Control.Monad       (forM)
+import Data.List           (span)
 import Data.Maybe          (isJust)
 import Data.String         (IsString(..))
 import System.Exit         (ExitCode)
@@ -157,5 +158,20 @@ newtype ProjectTarget = ProjectTarget { projectTarget :: String }
 
 instance IsString ProjectTarget where
   fromString = ProjectTarget
+
+componentName :: Tagged bt ProjectTarget -> String
+componentName = safeLast . splitOn ':' . stripTag
+
+safeLast :: [[a]] -> [a]
+safeLast []  = []
+safeLast ass = last ass
+
+splitOn :: (Eq a) => a -> [a] -> [[a]]
+splitOn sep = go
+  where
+    go [] = []
+    go as = case span (/= sep) as of
+              (seg, [])    -> seg : []
+              (seg, _:as') -> seg : go as'
 
 --------------------------------------------------------------------------------

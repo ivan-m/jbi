@@ -150,7 +150,7 @@ class CabalMode mode where
               -> Args -> IO ExitCode
   cabalRun env cmd prog progArgs = commandArgs args env cmd
     where
-      args = "run" : stripTag prog : "--" : progArgs
+      args = "run" : componentName (stripTag prog) : "--" : progArgs
 
   cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalUpdate = commandArg "update"

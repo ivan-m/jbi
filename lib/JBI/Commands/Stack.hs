@@ -16,7 +16,7 @@ import JBI.Commands.Tool
 import JBI.Environment
 import JBI.Tagged
 
-import Data.List        (isPrefixOf, span)
+import Data.List        (isPrefixOf)
 import Data.Maybe       (maybeToList)
 import System.Directory (doesDirectoryExist, getCurrentDirectory)
 import System.Exit      (ExitCode)
@@ -92,18 +92,3 @@ commandArg arg = commandArgs [arg]
 commandArgs :: Args -> GlobalEnv -> Tagged Stack CommandPath
                -> IO ExitCode
 commandArgs args _env cmd = tryRun cmd args
-
-componentName :: Tagged bt ProjectTarget -> String
-componentName = safeLast . splitOn ':' . stripTag
-
-safeLast :: [[a]] -> [a]
-safeLast []  = []
-safeLast ass = last ass
-
-splitOn :: (Eq a) => a -> [a] -> [[a]]
-splitOn sep = go
-  where
-    go [] = []
-    go as = case span (/= sep) as of
-              (seg, [])    -> seg : []
-              (seg, _:as') -> seg : go as'
