@@ -102,6 +102,7 @@ class CabalMode mode where
       go _ = recurseUpFindFile isCabalFile
 
   hasModeArtifacts :: Tagged (Cabal mode) ProjectRoot -> IO Bool
+  hasModeArtifacts = hasCabalDist
 
   cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
@@ -133,8 +134,8 @@ class CabalMode mode where
 
   cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
--- | Not made part of default call in case cabal-new does something
---   different.
+-- | Not made part of default 'BuildTool' instance in case cabal-new
+--   does something different.
 hasCabalDist :: Tagged (Cabal mode) ProjectRoot -> IO Bool
 hasCabalDist pr = doesDirectoryExist (stripTag pr </> "dist")
 
