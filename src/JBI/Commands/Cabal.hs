@@ -23,8 +23,8 @@ import Control.Exception   (SomeException(SomeException), handle)
 import Control.Monad       (filterM)
 import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
-import System.Directory    (doesDirectoryExist, doesFileExist,
-                            getCurrentDirectory, listDirectory, removeFile)
+import System.Directory    (doesFileExist, getCurrentDirectory, listDirectory,
+                            removeFile)
 import System.Exit         (ExitCode, die, exitSuccess)
 import System.FilePath     (dropTrailingPathSeparator, isDrive, takeDirectory,
                             takeExtension, (</>))
@@ -145,11 +145,6 @@ class CabalMode mode where
 
   cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalUpdate = commandArg "update"
-
--- | Not made part of default instance in case cabal-new
---   does something different.
-hasCabalDist :: Tagged (Cabal mode) ProjectRoot -> IO Bool
-hasCabalDist pr = doesDirectoryExist (stripTag pr </> "dist")
 
 --------------------------------------------------------------------------------
 
