@@ -152,6 +152,40 @@ hasCabalDist pr = doesDirectoryExist (stripTag pr </> "dist")
 
 --------------------------------------------------------------------------------
 
+data Sandbox
+
+instance CabalMode Sandbox where
+  modeName _ = "sandbox"
+
+  canUseMode _ _ = return True -- TODO: lower version bound
+
+  hasModeArtifacts pr = liftA2 (&&) (hasCabalDist pr)
+                                    (doesFileExist (stripTag pr </> "cabal.sandbox.config"))
+
+  cabalPrepare = commandArgs ["sandbox", "init"]
+
+  cabalConfigure env cmd = tryConfigure
+    where
+      install = commandArgs ["install", "--only-dependencies"
+                            , "--enable-tests", "--enable-benchmarks"]
+                            env cmd
+
+      tryInstall = tryCommand "Installation failed; updating index."
+                              (cabalUpdate env cmd)
+                              install
+
+      tryConfigure = tryCommand "Configuring failed; checking dependencies"
+                                tryInstall
+                                configure
+
+      configure = commandArgs ["configure", "--enable-tests", "--enable-benchmarks"]
+                              env cmd
+
+  cabalClean env cmd = commandArg "clean" env cmd
+                       .&&. commandArgs ["sandbox", "delete"] env cmd
+
+--------------------------------------------------------------------------------
+
 -- | If an exception occurs, return 'Nothing'
 tryIO :: IO (Maybe a) -> IO (Maybe a)
 tryIO = handle (\SomeException{} -> return Nothing)
