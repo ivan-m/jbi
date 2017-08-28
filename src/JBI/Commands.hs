@@ -13,7 +13,9 @@ module JBI.Commands
   ( WrappedTool (..)
   , Valid
   , toolName
+  , toolInformation
   , checkValidity
+  , alreadyUsed
     -- * Commands
   , prepare
   , targets
@@ -52,6 +54,7 @@ instance Eq (WrappedTool Proxy) where
 instance Show (WrappedTool Proxy) where
   show = toolName
 
+deriving instance Show (WrappedTool ToolInformation)
 deriving instance Show (WrappedTool Valid)
 
 withWrapped :: (forall bt. (NamedTool bt) => proxy bt -> res)
@@ -61,6 +64,9 @@ withWrapped f (Wrapped bt) = f bt
 toolName :: WrappedTool proxy -> String
 toolName = withWrapped prettyName
 
+toolInformation :: GlobalEnv -> WrappedTool proxy -> IO (WrappedTool ToolInformation)
+toolInformation env (Wrapped pr) = Wrapped <$> commandToolInformation env pr
+
 --------------------------------------------------------------------------------
 
 data Valid bt = Valid
@@ -69,6 +75,9 @@ data Valid bt = Valid
   , hasArtifacts :: !Bool
     -- ^ Only to be used with 'ensurePrepared', 'prepare', 'unprepared'.
   } deriving (Eq, Ord, Show, Read)
+
+alreadyUsed :: WrappedTool Valid -> Bool
+alreadyUsed = withWrapped hasArtifacts
 
 -- This is pretty ugly; one way to clean it up would be to use MaybeT.
 checkValidity :: GlobalEnv -> WrappedTool proxy -> IO (Maybe (WrappedTool Valid))
@@ -92,9 +101,6 @@ runInProject :: (forall bt. (BuildTool bt) => Tagged bt CommandPath -> IO res)
 runInProject f (Wrapped val) = withCurrentDirectory (stripTag (projectDir val))
                                                     (f (path (command val)))
 
-unprepared :: WrappedTool Valid -> Bool
-unprepared = not . withWrapped hasArtifacts
-
 prepareWrapped :: GlobalEnv -> WrappedTool Valid -> IO (WrappedTool Valid)
 prepareWrapped env wt@(Wrapped val) = do
   ec <- runInProject (commandPrepare env) wt
@@ -109,7 +115,7 @@ prepareWrapped env wt@(Wrapped val) = do
 runPrepared :: (forall bt. (BuildTool bt) => GlobalEnv -> Tagged bt CommandPath -> IO res)
                -> GlobalEnv -> WrappedTool Valid -> IO res
 runPrepared f env wv = do
-  wv' <- if unprepared wv
+  wv' <- if not (alreadyUsed wv)
             then prepareWrapped env wv
             else return wv
   runInProject (f env) wv'

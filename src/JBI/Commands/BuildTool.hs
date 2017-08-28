@@ -99,6 +99,17 @@ class (BuildTool bt) => NamedTool bt where
   prettyName :: proxy bt -> String
   prettyName = nameOfCommand . proxy commandName
 
+data ToolInformation bt = ToolInformation
+  { tool        :: !String
+  , information :: !(Maybe (BuildUsage bt))
+  } deriving (Eq, Show, Read)
+
+commandToolInformation :: (NamedTool bt)
+                          => GlobalEnv -> proxy bt
+                          -> IO (ToolInformation bt)
+commandToolInformation env pr =
+  ToolInformation (prettyName pr) <$> commandBuildUsage env
+
 data BuildUsage bt = BuildUsage
   { installation :: !(Installed bt)
   , usable       :: !Bool

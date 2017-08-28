@@ -21,3 +21,6 @@ data GlobalEnv = GlobalEnv
   { nix :: NixSupport
   , ghc :: Maybe (Installed GHC)
   } deriving (Eq, Show, Read)
+
+globalEnv :: IO GlobalEnv
+globalEnv = GlobalEnv <$> findNixSupport <*> commandInformation
