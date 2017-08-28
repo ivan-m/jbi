@@ -20,7 +20,7 @@ import JBI.Tagged
 import Control.Applicative (liftA2, (<*>))
 import Control.Exception   (SomeException(SomeException), handle)
 import Control.Monad       (filterM)
-import Data.Maybe          (isJust)
+import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
 import System.Directory    (doesDirectoryExist, doesFileExist,
                             getCurrentDirectory, listDirectory)
@@ -117,22 +117,33 @@ class CabalMode mode where
 
   cabalBuild :: GlobalEnv -> Tagged (Cabal mode) CommandPath
                   -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+  cabalBuild = commandArgTarget "build"
 
   cabalRepl :: GlobalEnv -> Tagged (Cabal mode) CommandPath
                -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+  cabalRepl = commandArgTarget "repl"
 
   cabalClean :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalTest :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalTest = commandArg "test"
 
   cabalBench :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalBench = commandArg "bench"
 
   cabalExec :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> String -> Args -> IO ExitCode
+  cabalExec env cmd prog progArgs = commandArgs args env cmd
+    where
+      args = "exec" : prog : "--" : progArgs
 
   cabalRun :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> Tagged (Cabal mode) ProjectTarget
               -> Args -> IO ExitCode
+  cabalRun env cmd prog progArgs = commandArgs args env cmd
+    where
+      args = "run" : stripTag prog : "--" : progArgs
 
   cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalUpdate = commandArg "update"
 
 -- | Not made part of default 'BuildTool' instance in case cabal-new
 --   does something different.
@@ -223,3 +234,19 @@ getComponents gpd = concat
       | otherwise                = []
 
     getType f typ = map (\cmp -> typ ++ ':' : rawComponentName (fst cmp)) (f gpd)
+
+--------------------------------------------------------------------------------
+
+commandArgTarget :: String -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+                    -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+commandArgTarget arg env cmd mt = commandArgs args env cmd
+  where
+    args = arg : maybeToList (fmap stripTag mt)
+
+commandArg :: String -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+              -> IO ExitCode
+commandArg arg = commandArgs [arg]
+
+commandArgs :: Args -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+               -> IO ExitCode
+commandArgs args _env cmd = tryRun cmd args
