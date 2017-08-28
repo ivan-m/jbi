@@ -67,7 +67,7 @@ parseCommand = (subparser . mconcat $
                             (progDesc "Run benchmark(s)."))
   , command "exec"    (info (Exec <$> parseExecutable <*> parseArgs)
                             (progDesc "Run the specified executable within the build environment."))
-  , command "exec"    (info (Run <$> parseTarget <*> parseArgs)
+  , command "run"     (info (Run <$> parseTarget <*> parseArgs)
                             (progDesc "Run the specified executable target within the build environment."))
   , command "update"  (info (pure Update)
                             (progDesc "Update the package index (usually not needed)."))
