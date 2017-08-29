@@ -99,8 +99,10 @@ tryRunOutput :: FilePath -> Args -> IO (Maybe String)
 tryRunOutput cmd args = do
   res <- readProcessWithExitCode cmd args ""
   return $ case res of
-             (ExitSuccess, out, "") -> Just out
-             _                      -> Nothing
+             (ExitSuccess, out, "" ) -> Just out
+             -- Some tools (e.g. Stack) put output to stderr
+             (ExitSuccess, "",  err) -> Just err
+             _                       -> Nothing
 
 -- | As with 'tryRunOutput' but only return the first line (if any).
 tryRunLine :: FilePath -> Args -> IO (Maybe String)
