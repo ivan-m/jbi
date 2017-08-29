@@ -24,7 +24,7 @@ library
                      , JBI.Environment
                      , JBI.Tagged
 
-  build-depends:       base >=4.8 && <4.10
+  build-depends:       base >=4.8 && <4.11
                      , Cabal >= 1.22.0.0 && < 2.1
                      , directory >= 1.2.5.0
                      , filepath >= 1.4.0.0 && < 1.5
