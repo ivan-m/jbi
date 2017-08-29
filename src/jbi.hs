@@ -146,6 +146,6 @@ runCommand tools cmd = do
     printInfo Detailed       = groom <$> getInformation tools
                                -- This is pretty ugly... but will suffice for now.
 
--- Unline unlines, this doesn't add a trailing newline.
+-- Unlike unlines, this doesn't add a trailing newline.
 multiLine :: [String] -> String
 multiLine = intercalate "\n"
