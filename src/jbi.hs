@@ -85,9 +85,9 @@ parseCommand = (hsubparser . mconcat $
   <|> pure (Build Nothing)
 
 parseTarget :: Parser ProjectTarget
-parseTarget = strArgument (   metavar "TARGET"
-                           <> help "Project target (see the `targets` command)"
-                          )
+parseTarget = argument (ProjectTarget <$> str) (   metavar "TARGET"
+                                                <> help "Project target (see the `targets` command)"
+                                               )
 
 parseExecutable :: Parser String
 parseExecutable = strArgument (   metavar "COMMAND"
