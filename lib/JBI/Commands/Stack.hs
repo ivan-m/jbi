@@ -12,11 +12,12 @@
 module JBI.Commands.Stack (Stack) where
 
 import JBI.Commands.BuildTool
+import JBI.Commands.Nix       (nixShell)
 import JBI.Commands.Tool
 import JBI.Environment
 import JBI.Tagged
 
-import Data.Maybe       (maybeToList)
+import Data.Maybe       (isJust, maybeToList)
 import System.Directory (doesDirectoryExist)
 import System.Exit      (ExitCode)
 import System.FilePath  ((</>))
@@ -81,4 +82,10 @@ commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> GlobalEnv -> Tagged Stack CommandPath
                -> IO ExitCode
-commandArgs args _env cmd = tryRun cmd args
+commandArgs args env cmd = tryRun cmd args'
+  where
+    hasNix = isJust (nixShell (nix env))
+
+    args'
+      | hasNix    = "--nix" : args
+      | otherwise = args
