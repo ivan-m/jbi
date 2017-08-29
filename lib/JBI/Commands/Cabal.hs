@@ -56,7 +56,7 @@ instance Tool (Cabal mode) where
   commandName = "cabal"
 
 instance (CabalMode mode) => BuildTool (Cabal mode) where
-  canUseCommand env inst = (isJust (ghc env) &&) <$> canUseMode env inst
+  canUseCommand = canUseMode
 
   commandProjectRoot = cabalProjectRoot
 
@@ -160,7 +160,9 @@ data Sandbox
 instance CabalMode Sandbox where
   modeName _ = "sandbox"
 
-  canUseMode _ inst = return (maybe True ((>= makeVersion [1,18]) . stripTag) (version inst))
+  canUseMode env inst = return (isJust (ghc env)
+                                && maybe True ((>= makeVersion [1,18]) . stripTag)
+                                              (version inst))
 
   hasModeArtifacts pr = doesFileExist (stripTag pr </> "cabal.sandbox.config")
 
