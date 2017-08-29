@@ -95,9 +95,9 @@ parseExecutable = strArgument (   metavar "COMMAND"
                               )
 
 parseArgs :: Parser Args
-parseArgs = many (argument str (   metavar "ARG"
-                                <> help "Optional arguments to pass through to the command"
-                               ))
+parseArgs = many (strArgument (   metavar "ARG"
+                               <> help "Optional arguments to pass through to the command"
+                              ))
 
 parseInfo :: Parser InfoType
 parseInfo = helper <*> (hsubparser . mconcat $
