@@ -15,10 +15,13 @@ import JBI.Commands.BuildTool (ProjectTarget(..))
 import JBI.Commands.Tool      (Args)
 import Paths_jbi              (version)
 
+import Control.Applicative (many, optional, (<*>), (<|>))
 import Data.List           (intercalate)
 import Data.Monoid         (mconcat, (<>))
 import Data.Version        (showVersion)
-import Options.Applicative
+import Options.Applicative (Parser, ParserInfo, argument, command, execParser,
+                            footer, fullDesc, header, help, helper, hsubparser,
+                            info, metavar, progDesc, str, strArgument)
 import System.Exit         (ExitCode(ExitSuccess), die, exitWith)
 import Text.Groom          (groom)
 
