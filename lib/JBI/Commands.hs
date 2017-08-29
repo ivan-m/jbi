@@ -127,9 +127,8 @@ prepare :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
 prepare env wv = prepareWrapped env wv >> return ExitSuccess
 -- Explicitly prepare.
 
--- Doesn't need to be prepared!
-targets :: WrappedTool Valid -> IO [ProjectTarget]
-targets = runInProject (fmap stripTags . commandTargets)
+targets :: GlobalEnv -> WrappedTool Valid -> IO [ProjectTarget]
+targets = runPrepared (const (fmap stripTags . commandTargets))
 
 build :: Maybe ProjectTarget -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
 build targ = runPrepared (\env cp -> commandBuild env cp (tagInner (tag targ)))

@@ -137,7 +137,7 @@ runCommand tools cmd = do
                           putStrLn out
                           return ExitSuccess
 
-    printTargets = tooled (const (fmap (multiLine . map projectTarget) . targets))
+    printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
     printInfo AvailableTools = return . multiLine . map toolName $ tools
     printInfo ChosenTool     = do env <- globalEnv
