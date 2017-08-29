@@ -24,7 +24,6 @@ import JBI.Environment
 import JBI.Tagged
 
 import Control.Applicative (liftA2, (<*>))
-import Control.Exception   (SomeException(SomeException), handle)
 import Control.Monad       (filterM)
 import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
@@ -32,8 +31,7 @@ import Data.Version        (makeVersion)
 import System.Directory    (doesFileExist, getCurrentDirectory, listDirectory,
                             removeFile)
 import System.Exit         (ExitCode, die, exitSuccess)
-import System.FilePath     (dropTrailingPathSeparator, isDrive, takeDirectory,
-                            takeExtension, (</>))
+import System.FilePath     (takeExtension, (</>))
 import System.IO.Error     (ioError, isDoesNotExistError, tryIOError)
 
 import qualified Distribution.Package                  as CPkg
@@ -225,25 +223,6 @@ instance CabalMode Nix where
           _        -> exitSuccess
 
 --------------------------------------------------------------------------------
-
--- | If an exception occurs, return 'Nothing'
-tryIO :: IO (Maybe a) -> IO (Maybe a)
-tryIO = handle (\SomeException{} -> return Nothing)
-
--- | Recurse up until you find a directory containing a file that
---   matches the predicate, returning that directory.
-recurseUpFindFile :: (FilePath -> Bool) -> IO (Maybe FilePath)
-recurseUpFindFile p = tryIO $ go . dropTrailingPathSeparator =<< getCurrentDirectory
-  where
-    go dir = do cntns  <- listDirectory dir
-                files <- filterM (doesFileExist . (dir </>)) cntns
-                if any p files
-                   then return (Just dir)
-                   -- We do the base case check here so we can
-                   -- actually check the top level directory.
-                   else if isDrive dir
-                           then return Nothing
-                           else go (takeDirectory dir)
 
 isCabalFile :: FilePath -> Bool
 isCabalFile = ((== ".cabal") . takeExtension)

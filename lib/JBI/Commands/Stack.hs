@@ -16,11 +16,10 @@ import JBI.Commands.Tool
 import JBI.Environment
 import JBI.Tagged
 
-import Data.List        (isPrefixOf)
 import Data.Maybe       (maybeToList)
-import System.Directory (doesDirectoryExist, getCurrentDirectory)
+import System.Directory (doesDirectoryExist)
 import System.Exit      (ExitCode)
-import System.FilePath  (dropTrailingPathSeparator, normalise, (</>))
+import System.FilePath  ((</>))
 
 --------------------------------------------------------------------------------
 
@@ -33,18 +32,8 @@ instance BuildTool Stack where
 
   commandProjectRoot = withTaggedF go
     where
-      go cmd = do mProjRoot <- tryRunLine cmd ["path", "--project-root"]
-                  case cleanse <$> mProjRoot of
-                    Nothing -> return Nothing
-                    Just root -> do
-                      currDir <- cleanse <$> getCurrentDirectory
-                      return $ if root `isPrefixOf` currDir
-                                  then Just root
-                                  else Nothing
-
-      -- Just in case; this is a poor-man's version of
-      -- canonicalizePath by "knowing" that they're both directories.
-      cleanse = normalise . dropTrailingPathSeparator
+      go :: FilePath -> IO (Maybe FilePath)
+      go _ = recurseUpFindFile (== "stack.yaml")
 
   hasBuildArtifacts dir = doesDirectoryExist (stripTag dir </> ".stack-work")
 
