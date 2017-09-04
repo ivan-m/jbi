@@ -1,4 +1,6 @@
-{-# LANGUAGE FlexibleInstances, GADTs, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances, GADTs, OverloadedStrings, RankNTypes,
+             StandaloneDeriving #-}
+
 {- |
    Module      : JBI.Commands
    Description : Running a specific build tool
@@ -35,6 +37,7 @@ import JBI.Environment
 import JBI.Tagged
 
 import Control.Monad    (forM)
+import Data.Aeson       (ToJSON(toJSON))
 import Data.Function    (on)
 import Data.Proxy       (Proxy(..))
 import System.Directory (withCurrentDirectory)
@@ -56,6 +59,9 @@ instance Show (WrappedTool Proxy) where
 
 deriving instance Show (WrappedTool ToolInformation)
 deriving instance Show (WrappedTool Valid)
+
+instance ToJSON (WrappedTool ToolInformation) where
+  toJSON = withWrapped toJSON
 
 withWrapped :: (forall bt. (NamedTool bt) => proxy bt -> res)
                -> WrappedTool proxy -> res

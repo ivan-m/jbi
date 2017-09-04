@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, OverloadedStrings #-}
+
 {- |
    Module      : JBI.Commands.Tool
    Description : Common tooling commands
@@ -14,10 +15,12 @@ module JBI.Commands.Tool where
 import JBI.Tagged
 
 import Control.Applicative          (liftA2)
+import Data.Aeson                   (ToJSON(toJSON))
 import Data.Char                    (isDigit)
 import Data.Maybe                   (listToMaybe)
 import Data.String                  (IsString(..))
 import Data.Version                 (Version, parseVersion)
+import GHC.Generics                 (Generic)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
 import System.IO                    (IOMode(WriteMode), withFile)
@@ -60,6 +63,9 @@ instance IsString CommandName where
 newtype CommandPath = CommandPath { pathToCommand :: FilePath }
   deriving (Eq, Ord, Show, Read)
 
+instance ToJSON CommandPath where
+  toJSON = toJSON . pathToCommand
+
 instance IsString CommandPath where
   fromString = CommandPath
 
@@ -68,7 +74,7 @@ data Installed t = Installed
   , version :: !(Maybe (Tagged t Version))
                -- ^ Try and determine the version.  Only a factor in
                --   case any features are version-specific.
-  } deriving (Eq, Ord, Show, Read)
+  } deriving (Eq, Ord, Show, Read, Generic, ToJSON)
 
 --------------------------------------------------------------------------------
 

@@ -15,15 +15,18 @@ import JBI.Commands.BuildTool (ProjectTarget(..))
 import JBI.Commands.Tool      (Args)
 import Paths_jbi              (version)
 
-import Control.Applicative (many, optional, (<*>), (<|>))
-import Data.List           (intercalate)
-import Data.Monoid         (mconcat, (<>))
-import Data.Version        (showVersion)
-import Options.Applicative (Parser, ParserInfo, argument, command, execParser,
-                            footer, fullDesc, header, help, helper, hsubparser,
-                            info, metavar, progDesc, str, strArgument)
-import System.Exit         (ExitCode(ExitSuccess), die, exitWith)
-import Text.Groom          (groom)
+import Control.Applicative      (many, optional, (<*>), (<|>))
+import Data.Aeson.Encode.Pretty (encodePrettyToTextBuilder)
+import Data.List                (intercalate)
+import Data.Monoid              (mconcat, (<>))
+import Data.Text.Lazy           (unpack)
+import Data.Text.Lazy.Builder   (toLazyText)
+import Data.Version             (showVersion)
+import Options.Applicative      (Parser, ParserInfo, argument, command,
+                                 execParser, footer, fullDesc, header, help,
+                                 helper, hsubparser, info, metavar, progDesc,
+                                 str, strArgument)
+import System.Exit              (ExitCode(ExitSuccess), die, exitWith)
 
 --------------------------------------------------------------------------------
 
@@ -146,8 +149,7 @@ runCommand tools cmd = do
     printInfo ChosenTool     = do env <- globalEnv
                                   mTool <- chooseTool env tools
                                   maybe toolFail (return . toolName) mTool
-    printInfo Detailed       = groom <$> getInformation tools
-                               -- This is pretty ugly... but will suffice for now.
+    printInfo Detailed       = unpack . toLazyText . encodePrettyToTextBuilder <$> getInformation tools
 
 -- Unlike unlines, this doesn't add a trailing newline.
 multiLine :: [String] -> String

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric #-}
+
 {- |
    Module      : JBI.Environment
    Description : Build tool agnostic environment
@@ -15,12 +17,15 @@ module JBI.Environment where
 import JBI.Commands.Nix
 import JBI.Commands.Tool
 
+import Data.Aeson   (ToJSON)
+import GHC.Generics (Generic)
+
 --------------------------------------------------------------------------------
 
 data GlobalEnv = GlobalEnv
   { nix :: NixSupport
   , ghc :: Maybe (Installed GHC)
-  } deriving (Eq, Show, Read)
+  } deriving (Eq, Show, Read, Generic, ToJSON)
 
 globalEnv :: IO GlobalEnv
 globalEnv = GlobalEnv <$> findNixSupport <*> commandInformation

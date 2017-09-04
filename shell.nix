@@ -4,8 +4,8 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, aeson, base, Cabal, directory, filepath
-      , groom, optparse-applicative, process, stdenv, tagged
+  f = { mkDerivation, aeson, aeson-pretty, base, Cabal, directory
+      , filepath, optparse-applicative, process, stdenv, tagged, text
       }:
       mkDerivation {
         pname = "jbi";
@@ -16,7 +16,9 @@ let
         libraryHaskellDepends = [
           aeson base Cabal directory filepath process tagged
         ];
-        executableHaskellDepends = [ base groom optparse-applicative ];
+        executableHaskellDepends = [
+          aeson-pretty base optparse-applicative text
+        ];
         description = "Just Build It - a \"do what I mean\" abstraction for Haskell build tools";
         license = stdenv.lib.licenses.mit;
       };

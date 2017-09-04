@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric #-}
+
 {- |
    Module      : JBI
    Description : Just Build It
@@ -41,9 +43,11 @@ import JBI.Commands.Stack
 import JBI.Environment
 
 import Control.Applicative ((<|>))
+import Data.Aeson          (ToJSON)
 import Data.List           (find)
 import Data.Maybe          (listToMaybe)
 import Data.Proxy          (Proxy(..))
+import GHC.Generics        (Generic)
 
 --------------------------------------------------------------------------------
 
@@ -68,7 +72,7 @@ chooseTool env tools = do
 data Information = Information
   { environment :: !GlobalEnv
   , toolDetails :: ![WrappedTool ToolInformation]
-  } deriving (Show)
+  } deriving (Show, Generic, ToJSON)
 
 getInformation :: [WrappedTool proxy] -> IO Information
 getInformation tools = do

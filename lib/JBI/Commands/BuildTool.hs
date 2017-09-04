@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts, MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, FlexibleContexts,
+             MultiParamTypeClasses #-}
 
 {- |
    Module      : JBI.Commands.Common
@@ -18,11 +19,12 @@ import JBI.Tagged
 
 import Control.Applicative (liftA2)
 import Control.Exception   (SomeException(SomeException), handle)
-import Control.Monad       (forM)
-import Control.Monad       (filterM)
+import Control.Monad       (filterM, forM)
+import Data.Aeson          (ToJSON(toJSON))
 import Data.List           (span)
 import Data.Maybe          (isJust)
 import Data.String         (IsString(..))
+import GHC.Generics        (Generic)
 import System.Directory    (doesFileExist, getCurrentDirectory, listDirectory)
 import System.Exit         (ExitCode)
 import System.FilePath     (dropTrailingPathSeparator, isDrive, takeDirectory,
@@ -108,7 +110,7 @@ class (BuildTool bt) => NamedTool bt where
 data ToolInformation bt = ToolInformation
   { tool        :: !String
   , information :: !(Maybe (BuildUsage bt))
-  } deriving (Eq, Show, Read)
+  } deriving (Eq, Show, Read, Generic, ToJSON)
 
 commandToolInformation :: (NamedTool bt)
                           => GlobalEnv -> proxy bt
@@ -120,12 +122,12 @@ data BuildUsage bt = BuildUsage
   { installation :: !(Installed bt)
   , usable       :: !Bool
   , project      :: !(Maybe (BuildProject bt))
-  } deriving (Eq, Show, Read)
+  } deriving (Eq, Show, Read, Generic, ToJSON)
 
 data BuildProject bt = BuildProject
   { projectRoot      :: !(Tagged bt ProjectRoot)
   , artifactsPresent :: !Bool
-  } deriving (Eq, Show, Read)
+  } deriving (Eq, Show, Read, Generic, ToJSON)
 
 -- | A 'Nothing' indicates that this tool cannot be used for this
 --   project (i.e. needs configuration).
@@ -156,6 +158,9 @@ newtype ProjectRoot = ProjectRoot { rootPath :: FilePath }
 
 instance IsString ProjectRoot where
   fromString = ProjectRoot
+
+instance ToJSON ProjectRoot where
+  toJSON = toJSON . rootPath
 
 -- | TODO: determine if this is a library, executable, test or benchmark component.
 newtype ProjectTarget = ProjectTarget { projectTarget :: String }

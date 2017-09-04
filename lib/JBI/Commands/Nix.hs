@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, OverloadedStrings #-}
 
 {- |
    Module      : JBI.Commands.Nix
@@ -16,14 +16,16 @@ import JBI.Commands.Tool
 import JBI.Tagged
 
 import Control.Applicative (liftA2)
+import Data.Aeson          (ToJSON)
 import Data.Char           (isSpace)
+import GHC.Generics        (Generic)
 
 --------------------------------------------------------------------------------
 
 data NixSupport = NixSupport
   { nixShell  :: !(Maybe (Installed NixShell))
   , cabal2Nix :: !(Maybe (Installed Cabal2Nix))
-  } deriving (Eq, Ord, Show, Read)
+  } deriving (Eq, Ord, Show, Read, Generic, ToJSON)
 
 findNixSupport :: IO NixSupport
 findNixSupport = liftA2 NixSupport commandInformation
