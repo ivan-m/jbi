@@ -1,7 +1,15 @@
 name:                jbi
 version:             0.1.0.0
 synopsis:            Just Build It - a "do what I mean" abstraction for Haskell build tools
--- description:
+description:
+  If you work with multiple Haskell projects, it can be annoying have to
+  change gears mentally as to which set of tooling you have to work with
+  for each one (configuring your editor, or even just the command-line).
+  .
+  @jbi@ aims to provide a common interface to the various Haskell build
+  tools available and automatically determine which one you should use,
+  so you can get back to hacking on your code, rather than on your
+  environment.
 license:             MIT
 license-file:        LICENSE
 author:              Ivan Lazar Miljenovic
