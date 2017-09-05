@@ -11,7 +11,7 @@
 module Main where
 
 import JBI
-import JBI.Commands.BuildTool (ProjectTarget(..))
+import JBI.Commands.BuildTool (ProjectTarget(..), rootPath)
 import JBI.Commands.Tool      (Args)
 import Paths_jbi              (version)
 
@@ -50,6 +50,7 @@ data Command = Prepare
 
 data InfoType = AvailableTools
               | ChosenTool
+              | ProjectDir
               | Detailed
               deriving (Eq, Show, Read)
 
@@ -111,6 +112,8 @@ parseInfo = hsubparser . mconcat $
                             (progDesc "Print all known build tools."))
   , command "chosen"  (info (pure ChosenTool)
                             (progDesc "Print the build tool chosen."))
+  , command "project" (info (pure ProjectDir)
+                            (progDesc "Path to the project directory."))
   , command "details" (info (pure Detailed)
                             (progDesc "Print detailed information about build tools."))
   ]
@@ -145,12 +148,15 @@ runCommand tools cmd = do
 
     printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
+    withChosen f = do env <- globalEnv
+                      mTool <- chooseTool env tools
+                      maybe toolFail (return . f) mTool
+
     jsonStr = unpack . toLazyText . encodePrettyToTextBuilder
 
     printInfo AvailableTools = return . multiLine . map toolName $ tools
-    printInfo ChosenTool     = do env <- globalEnv
-                                  mTool <- chooseTool env tools
-                                  maybe toolFail (return . toolName) mTool
+    printInfo ChosenTool     = withChosen toolName
+    printInfo ProjectDir     = withChosen (rootPath . infoProjectDir)
     printInfo Detailed       = jsonStr <$> getInformation tools
 
 -- Unlike unlines, this doesn't add a trailing newline.

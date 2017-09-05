@@ -17,6 +17,7 @@ module JBI
   , withTool
   , chooseTool
   , toolName
+  , infoProjectDir
     -- * System state\/environment
   , GlobalEnv(..)
   , globalEnv

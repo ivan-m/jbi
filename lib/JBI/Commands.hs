@@ -18,6 +18,7 @@ module JBI.Commands
   , toolInformation
   , checkValidity
   , alreadyUsed
+  , infoProjectDir
     -- * Commands
   , prepare
   , targets
@@ -84,6 +85,9 @@ data Valid bt = Valid
 
 alreadyUsed :: WrappedTool Valid -> Bool
 alreadyUsed = withWrapped hasArtifacts
+
+infoProjectDir :: WrappedTool Valid -> ProjectRoot
+infoProjectDir = withWrapped (stripTag . projectDir)
 
 -- This is pretty ugly; one way to clean it up would be to use MaybeT.
 checkValidity :: GlobalEnv -> WrappedTool proxy -> IO (Maybe (WrappedTool Valid))
