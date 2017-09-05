@@ -83,4 +83,10 @@ script:
  - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
    (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
 
+# Dog-fooding test
+ - VER=$(cabal info . | awk '{print $2;exit}') &&
+   SRC_TGZ=dist/$VER.tar.gz &&
+   tar -xzf $SRC_TGZ &&
+   (cd $VER && ../dist/build/jbi/jbi)
+
 # EOF
