@@ -106,14 +106,14 @@ parseArgs = many (strArgument (   metavar "ARG"
                               ))
 
 parseInfo :: Parser InfoType
-parseInfo = helper <*> (hsubparser . mconcat $
+parseInfo = hsubparser . mconcat $
   [ command "tools"   (info (pure AvailableTools)
                             (progDesc "Print all known build tools."))
   , command "chosen"  (info (pure ChosenTool)
                             (progDesc "Print the build tool chosen."))
   , command "details" (info (pure Detailed)
                             (progDesc "Print detailed information about build tools."))
-  ])
+  ]
 
 --------------------------------------------------------------------------------
 
