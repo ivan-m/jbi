@@ -145,11 +145,13 @@ runCommand tools cmd = do
 
     printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
+    jsonStr = unpack . toLazyText . encodePrettyToTextBuilder
+
     printInfo AvailableTools = return . multiLine . map toolName $ tools
     printInfo ChosenTool     = do env <- globalEnv
                                   mTool <- chooseTool env tools
                                   maybe toolFail (return . toolName) mTool
-    printInfo Detailed       = unpack . toLazyText . encodePrettyToTextBuilder <$> getInformation tools
+    printInfo Detailed       = jsonStr <$> getInformation tools
 
 -- Unlike unlines, this doesn't add a trailing newline.
 multiLine :: [String] -> String
