@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP, OverloadedStrings #-}
 
 {- |
-   Module      : JBI.Commands.Cabal
+   Module      : System.JBI.Commands.Cabal
    Description : cabal-install support
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -10,18 +10,18 @@
 
 
  -}
-module JBI.Commands.Cabal
+module System.JBI.Commands.Cabal
   ( Cabal
   , CabalMode
   , Sandbox
   , Nix
   ) where
 
-import JBI.Commands.BuildTool
-import JBI.Commands.Nix
-import JBI.Commands.Tool
-import JBI.Environment
-import JBI.Tagged
+import System.JBI.Commands.BuildTool
+import System.JBI.Commands.Nix
+import System.JBI.Commands.Tool
+import System.JBI.Environment
+import System.JBI.Tagged
 
 import Control.Applicative (liftA2, (<*>))
 import Control.Monad       (filterM)

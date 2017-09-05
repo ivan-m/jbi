@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric, OverloadedStrings #-}
 
 {- |
-   Module      : JBI.Commands.Tool
+   Module      : System.JBI.Commands.Tool
    Description : Common tooling commands
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -10,9 +10,9 @@
 
 
  -}
-module JBI.Commands.Tool where
+module System.JBI.Commands.Tool where
 
-import JBI.Tagged
+import System.JBI.Tagged
 
 import Control.Applicative          (liftA2)
 import Data.Aeson                   (ToJSON(toJSON))

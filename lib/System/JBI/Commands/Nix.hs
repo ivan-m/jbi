@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric, OverloadedStrings #-}
 
 {- |
-   Module      : JBI.Commands.Nix
+   Module      : System.JBI.Commands.Nix
    Description : Nix tooling support
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -10,10 +10,10 @@
 
 
  -}
-module JBI.Commands.Nix where
+module System.JBI.Commands.Nix where
 
-import JBI.Commands.Tool
-import JBI.Tagged
+import System.JBI.Commands.Tool
+import System.JBI.Tagged
 
 import Control.Applicative (liftA2)
 import Data.Aeson          (ToJSON)

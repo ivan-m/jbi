@@ -26,15 +26,15 @@ source-repository head
   location:    https://github.com/ivan-m/jbi.git
 
 library
-  exposed-modules:     JBI
-                     , JBI.Commands
-                     , JBI.Commands.BuildTool
-                     , JBI.Commands.Cabal
-                     , JBI.Commands.Nix
-                     , JBI.Commands.Stack
-                     , JBI.Commands.Tool
-                     , JBI.Environment
-                     , JBI.Tagged
+  exposed-modules:     System.JBI
+                     , System.JBI.Commands
+                     , System.JBI.Commands.BuildTool
+                     , System.JBI.Commands.Cabal
+                     , System.JBI.Commands.Nix
+                     , System.JBI.Commands.Stack
+                     , System.JBI.Commands.Tool
+                     , System.JBI.Environment
+                     , System.JBI.Tagged
 
   build-depends:       base >=4.8 && <4.11
                      , aeson >= 0.11.1.0 && < 1.3

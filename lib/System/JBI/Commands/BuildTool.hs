@@ -2,7 +2,7 @@
              MultiParamTypeClasses #-}
 
 {- |
-   Module      : JBI.Commands.Common
+   Module      : System.JBI.Commands.Common
    Description : How to handle build tools
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -11,11 +11,11 @@
 
 
  -}
-module JBI.Commands.BuildTool where
+module System.JBI.Commands.BuildTool where
 
-import JBI.Commands.Tool
-import JBI.Environment
-import JBI.Tagged
+import System.JBI.Commands.Tool
+import System.JBI.Environment
+import System.JBI.Tagged
 
 import Control.Applicative (liftA2)
 import Control.Exception   (SomeException(SomeException), handle)

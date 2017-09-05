@@ -2,7 +2,7 @@
              MultiParamTypeClasses #-}
 
 {- |
-   Module      : JBI.Commands.Tagged
+   Module      : System.JBI.Commands.Tagged
    Description : Support for the Tagged type
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -11,7 +11,7 @@
 
 
  -}
-module JBI.Tagged
+module System.JBI.Tagged
   ( WithTagged (..)
   , stripTag
   , stripTags

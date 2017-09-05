@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric #-}
 
 {- |
-   Module      : JBI
+   Module      : System.JBI
    Description : Just Build It
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -10,7 +10,7 @@
 
 
  -}
-module JBI
+module System.JBI
   ( WrappedTool
   , Valid
   , defaultTools
@@ -37,11 +37,11 @@ module JBI
   , update
   ) where
 
-import JBI.Commands
-import JBI.Commands.BuildTool (ToolInformation)
-import JBI.Commands.Cabal
-import JBI.Commands.Stack
-import JBI.Environment
+import System.JBI.Commands
+import System.JBI.Commands.BuildTool (ToolInformation)
+import System.JBI.Commands.Cabal
+import System.JBI.Commands.Stack
+import System.JBI.Environment
 
 import Control.Applicative ((<|>))
 import Data.Aeson          (ToJSON)

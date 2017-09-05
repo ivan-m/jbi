@@ -209,8 +209,8 @@ need to explicitly run this command in.
 Pull requests are welcome.
 
 To add a new tool, you need to create an instance of the `BuildTool`
-class from `JBI.Commands.BuildTool`, and then insert your new tool
-into an appropriate place in `defaultTools` in `JBI`.
+class from `System.JBI.Commands.BuildTool`, and then insert your new
+tool into an appropriate place in `defaultTools` in `System.JBI`.
 
 ### What about languages other than Haskell?
 

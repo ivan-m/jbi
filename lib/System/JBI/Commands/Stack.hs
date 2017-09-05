@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {- |
-   Module      : JBI.Commands.Stack
+   Module      : System.JBI.Commands.Stack
    Description : Stack commands
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -9,13 +9,13 @@
 
 
  -}
-module JBI.Commands.Stack (Stack) where
+module System.JBI.Commands.Stack (Stack) where
 
-import JBI.Commands.BuildTool
-import JBI.Commands.Nix       (nixShell)
-import JBI.Commands.Tool
-import JBI.Environment
-import JBI.Tagged
+import System.JBI.Commands.BuildTool
+import System.JBI.Commands.Nix       (nixShell)
+import System.JBI.Commands.Tool
+import System.JBI.Environment
+import System.JBI.Tagged
 
 import Data.Maybe       (isJust, maybeToList)
 import System.Directory (doesDirectoryExist)

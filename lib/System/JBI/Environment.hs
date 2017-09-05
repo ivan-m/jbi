@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass, DeriveGeneric #-}
 
 {- |
-   Module      : JBI.Environment
+   Module      : System.JBI.Environment
    Description : Build tool agnostic environment
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -12,10 +12,10 @@
    working directories, etc.).
 
  -}
-module JBI.Environment where
+module System.JBI.Environment where
 
-import JBI.Commands.Nix
-import JBI.Commands.Tool
+import System.JBI.Commands.Nix
+import System.JBI.Commands.Tool
 
 import Data.Aeson   (ToJSON)
 import GHC.Generics (Generic)

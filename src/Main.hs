@@ -10,10 +10,10 @@
  -}
 module Main where
 
-import JBI
-import JBI.Commands.BuildTool (ProjectTarget(..), rootPath)
-import JBI.Commands.Tool      (Args)
-import Paths_jbi              (version)
+import Paths_jbi                     (version)
+import System.JBI
+import System.JBI.Commands.BuildTool (ProjectTarget(..), rootPath)
+import System.JBI.Commands.Tool      (Args)
 
 import Control.Applicative      (many, optional, (<*>), (<|>))
 import Data.Aeson.Encode.Pretty (encodePrettyToTextBuilder)

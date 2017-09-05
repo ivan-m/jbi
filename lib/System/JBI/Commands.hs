@@ -2,7 +2,7 @@
              StandaloneDeriving #-}
 
 {- |
-   Module      : JBI.Commands
+   Module      : System.JBI.Commands
    Description : Running a specific build tool
    Copyright   : (c) Ivan Lazar Miljenovic
    License     : MIT
@@ -11,7 +11,7 @@
 
 
  -}
-module JBI.Commands
+module System.JBI.Commands
   ( WrappedTool (..)
   , Valid
   , toolName
@@ -32,10 +32,10 @@ module JBI.Commands
   , update
   ) where
 
-import JBI.Commands.BuildTool
-import JBI.Commands.Tool
-import JBI.Environment
-import JBI.Tagged
+import System.JBI.Commands.BuildTool
+import System.JBI.Commands.Tool
+import System.JBI.Environment
+import System.JBI.Tagged
 
 import Control.Monad    (forM)
 import Data.Aeson       (ToJSON(toJSON))
