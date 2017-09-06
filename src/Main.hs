@@ -73,7 +73,8 @@ parseCommand = (hsubparser . mconcat $
   , command "build"   (info (Build <$> optional parseTarget)
                             (progDesc "Build the project (optionally a specified target)."))
   , command "repl"    (info (REPL <$> optional parseTarget)
-                            (progDesc "Start a REPL (optionally for a specified target)."))
+                            (progDesc "Start a REPL.  Passing in a target is optional, but \
+                                      \highly recommended when multiple targets are available."))
   , command "clean"   (info (pure Clean)
                             (progDesc "Remove all build artifacts."))
   , command "test"    (info (pure Test)
