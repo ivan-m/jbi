@@ -129,7 +129,7 @@ class CabalMode mode where
 
   cabalRepl :: GlobalEnv -> Tagged (Cabal mode) CommandPath
                -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
-  cabalRepl = commandArgTarget "repl"
+  cabalRepl = commandArgsTarget ["repl", "--ghc-options=-ferror-spans"]
 
   cabalClean :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
@@ -293,11 +293,15 @@ getComponents gpd = concat
 
 --------------------------------------------------------------------------------
 
+commandArgsTarget :: Args -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+                     -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+commandArgsTarget args env cmd mt = commandArgs args' env cmd
+  where
+    args' = args ++ maybeToList (fmap stripTag mt)
+
 commandArgTarget :: String -> GlobalEnv -> Tagged (Cabal mode) CommandPath
                     -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
-commandArgTarget arg env cmd mt = commandArgs args env cmd
-  where
-    args = arg : maybeToList (fmap stripTag mt)
+commandArgTarget = commandArgsTarget . (:[])
 
 commandArg :: String -> GlobalEnv -> Tagged (Cabal mode) CommandPath
               -> IO ExitCode

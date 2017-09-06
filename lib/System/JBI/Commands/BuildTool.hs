@@ -66,7 +66,11 @@ class (Tool bt) => BuildTool bt where
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                   -> IO ExitCode
 
-  -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
+  -- | Launch a @ghci@ session within the current project.  Should
+  --   pass through the @-ferror-spans@ argument to the underlying
+  --   ghci process.
+  --
+  --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                  -> IO ExitCode
 
