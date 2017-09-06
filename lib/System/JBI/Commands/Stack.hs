@@ -47,7 +47,7 @@ instance BuildTool Stack where
 
   commandBuild = commandArgsTarget ["build", "--test", "--no-run-tests", "--bench", "--no-run-benchmarks"]
 
-  commandRepl = commandArgsTarget ["ghci", "--test", "--bench"]
+  commandRepl = commandArgsTarget ["ghci", "--test", "--bench", "--no-load"]
 
   commandClean = commandArgs ["clean", "--full"]
 
