@@ -227,7 +227,7 @@ instance CabalMode Nix where
 --------------------------------------------------------------------------------
 
 isCabalFile :: FilePath -> Bool
-isCabalFile = ((== ".cabal") . takeExtension)
+isCabalFile = (== ".cabal") . takeExtension
 
 --------------------------------------------------------------------------------
 -- The Cabal library likes to really keep changing things...
