@@ -34,7 +34,7 @@ instance BuildTool Stack where
   commandProjectRoot = withTaggedF go
     where
       go :: FilePath -> IO (Maybe FilePath)
-      go _ = recurseUpFindFile (== "stack.yaml")
+      go _ = recurseUpFindFile (== stackYaml)
 
   hasBuildArtifacts dir = doesDirectoryExist (stripTag dir </> ".stack-work")
 
@@ -70,6 +70,9 @@ instance BuildTool Stack where
 
 instance NamedTool Stack
 
+stackYaml :: String
+stackYaml = "stack.yaml"
+
 commandArgsTarget :: Args -> GlobalEnv -> Tagged Stack CommandPath
                      -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
 commandArgsTarget args env cmd mt = commandArgs args' env cmd
@@ -86,6 +89,11 @@ commandArgs args env cmd = tryRun cmd args'
   where
     hasNix = isJust (nixShell (nix env))
 
-    args'
-      | hasNix    = "--nix" : args
-      | otherwise = args
+    -- Take advantage of the fact that we're running in the same
+    -- directory as the stack.yaml file so that stack doesn't have to
+    -- bother looking for it.
+    args' = addNix (["--stack-yaml", stackYaml] ++ args)
+
+    addNix
+      | hasNix    = ("--nix":)
+      | otherwise = id
