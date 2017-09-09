@@ -207,6 +207,12 @@ instance CabalMode Nix where
                          Nothing  -> die "cabal2Nix required"
                          Just c2n -> tryRunToFile "shell.nix" c2n ["--shell", "."]
 
+  -- It is tempting to want to run cabal2nix again here just in case,
+  -- but people might have customised variants (different
+  -- haskellPackages set, etc.).
+  --
+  -- Instead, people need to run @jbi prepare@ if the .cabal file
+  -- changes.
   cabalConfigure env _ = case path <$> nixShell (nix env) of
                            Nothing -> die "nix-shell required"
                            Just ns -> tryRun ns ["--run", "cabal configure --enable-tests --enable-benchmarks"]
