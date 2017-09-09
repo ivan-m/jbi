@@ -41,6 +41,7 @@ library
                      , Cabal >= 1.22.0.0 && < 2.1
                      , directory >= 1.2.5.0
                      , filepath >= 1.4.0.0 && < 1.5
+                     , monad-parallel == 0.7.*
                      , process >= 1.4.3.0 && < 1.7
                      , tagged == 0.8.*
   hs-source-dirs:      lib
