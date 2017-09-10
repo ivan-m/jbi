@@ -77,7 +77,8 @@ toolInformation env (Wrapped pr) = Wrapped <$> commandToolInformation env pr
 --------------------------------------------------------------------------------
 
 data Valid bt = Valid
-  { command      :: !(Installed bt)
+  { command      :: !(Tagged bt CommandPath)
+                    -- ^ @since 0.2.0.0
   , projectDir   :: !(Tagged bt ProjectRoot)
   , hasArtifacts :: !Bool
     -- ^ Only to be used with 'ensurePrepared', 'prepare', 'unprepared'.
@@ -95,21 +96,21 @@ checkValidity env (Wrapped p) = fmap Wrapped <$> check p
   where
     check :: (BuildTool bt) => proxy' bt -> IO (Maybe (Valid bt))
     check _ = do
-      mInst <- commandInformation
-      case mInst of
+      mcp <- commandPath
+      case mcp of
         Nothing   -> return Nothing
-        Just inst -> do
-          usbl <- canUseCommand env inst
+        Just cp -> do
+          usbl <- canUseCommand env cp
           if not usbl
              then return Nothing
-             else do mroot <- commandProjectRoot (path inst)
+             else do mroot <- commandProjectRoot cp
                      forM mroot $ \root ->
-                       Valid inst root <$> hasBuildArtifacts root
+                       Valid cp root <$> hasBuildArtifacts root
 
 runInProject :: (forall bt. (BuildTool bt) => Tagged bt CommandPath -> IO res)
                 -> WrappedTool Valid -> IO res
 runInProject f (Wrapped val) = withCurrentDirectory (stripTag (projectDir val))
-                                                    (f (path (command val)))
+                                                    (f (command val))
 
 prepareWrapped :: GlobalEnv -> WrappedTool Valid -> IO (WrappedTool Valid)
 prepareWrapped env wt@(Wrapped val) = do

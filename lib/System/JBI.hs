@@ -46,9 +46,11 @@ import System.JBI.Environment
 import Control.Applicative ((<|>))
 import Data.Aeson          (ToJSON)
 import Data.List           (find)
-import Data.Maybe          (listToMaybe)
+import Data.Maybe          (catMaybes, listToMaybe)
 import Data.Proxy          (Proxy(..))
 import GHC.Generics        (Generic)
+
+import qualified Control.Monad.Parallel as P
 
 --------------------------------------------------------------------------------
 
@@ -67,7 +69,7 @@ withTool onFailure f tools = do
 
 chooseTool :: GlobalEnv -> [WrappedTool proxy] -> IO (Maybe (WrappedTool Valid))
 chooseTool env tools = do
-  valid <- mapMaybeM (checkValidity env) tools
+  valid <- catMaybes <$> P.mapM (checkValidity env) tools
   return (find alreadyUsed valid <|> listToMaybe valid)
 
 data Information = Information
@@ -78,14 +80,4 @@ data Information = Information
 getInformation :: [WrappedTool proxy] -> IO Information
 getInformation tools = do
   env <- globalEnv
-  Information env <$> mapM (toolInformation env) tools
-
---------------------------------------------------------------------------------
-
-mapMaybeM :: (a -> IO (Maybe b)) -> [a] -> IO [b]
-mapMaybeM f = go
-  where
-    go []     = return []
-    go (a:as) = do
-      mb <- f a
-      maybe id (:) mb <$> go as
+  Information env <$> P.mapM (toolInformation env) tools

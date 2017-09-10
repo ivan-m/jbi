@@ -38,7 +38,9 @@ class (Tool bt) => BuildTool bt where
   --   using this tool.
   --
   --   For example, a minimum version, need another tool installed, etc.
-  canUseCommand :: GlobalEnv -> Installed bt -> IO Bool
+  --
+  --   @since 0.2.0.0
+  canUseCommand :: GlobalEnv -> Tagged bt CommandPath -> IO Bool
   canUseCommand _ _ = return True
 
   -- | Try and determine the root directory for this project.
@@ -141,7 +143,7 @@ commandBuildUsage :: (BuildTool bt)
 commandBuildUsage env = do
   mInst <- commandInformation
   forM mInst $ \inst ->
-    BuildUsage inst <$> canUseCommand env inst
+    BuildUsage inst <$> canUseCommand env (path inst)
                     <*> commandBuildProject (path inst)
 
 

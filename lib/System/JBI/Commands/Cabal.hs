@@ -27,6 +27,7 @@ import Control.Applicative (liftA2, (<*>))
 import Control.Monad       (filterM)
 import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
+import Data.Version        (Version)
 import Data.Version        (makeVersion)
 import System.Directory    (doesFileExist, getCurrentDirectory, listDirectory,
                             removeFile)
@@ -96,7 +97,20 @@ getMode _ = Proxy
 class CabalMode mode where
   modeName :: proxy mode -> String
 
-  canUseMode :: GlobalEnv -> Installed (Cabal mode) -> IO Bool
+  -- | Optional minimal version of @cabal@ required.  Used to provide
+  --   default instance of @canUseMode@.
+  --
+  --   @since 0.2.0.0
+  needsMinCabal :: Maybe (Tagged (Cabal mode) Version)
+  needsMinCabal = Nothing
+
+  -- | @since 0.2.0.0
+  canUseMode :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO Bool
+  canUseMode env cp = case needsMinCabal of
+                        Nothing -> return hasGHC
+                        Just mv -> maybe hasGHC (mv <=) <$> commandVersion cp
+    where
+      hasGHC = isJust (ghc env)
 
   cabalProjectRoot :: Tagged (Cabal mode) CommandPath
                       -> IO (Maybe (Tagged (Cabal mode) ProjectRoot))
@@ -160,9 +174,7 @@ data Sandbox
 instance CabalMode Sandbox where
   modeName _ = "sandbox"
 
-  canUseMode env inst = return (isJust (ghc env)
-                                && maybe True ((>= makeVersion [1,18]) . stripTag)
-                                              (version inst))
+  needsMinCabal = Just (tag (makeVersion [1,18]))
 
   hasModeArtifacts pr = doesFileExist (stripTag pr </> "cabal.sandbox.config")
 
