@@ -2,6 +2,8 @@
 
 ## 0.2.0.0 -- 2017-09-xx
 
+* Add a `--version` (and `-V`) flag to the executable.
+
 * If a build tool needs the version to check validity it has to
   explicitly obtain it.
 

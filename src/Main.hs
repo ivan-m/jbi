@@ -23,9 +23,9 @@ import Data.Text.Lazy           (unpack)
 import Data.Text.Lazy.Builder   (toLazyText)
 import Data.Version             (showVersion)
 import Options.Applicative      (Parser, ParserInfo, argument, command,
-                                 execParser, footer, fullDesc, header, help,
-                                 helper, hsubparser, info, metavar, progDesc,
-                                 str, strArgument)
+                                 execParser, flag', footer, fullDesc, header,
+                                 help, helper, hsubparser, info, long, metavar,
+                                 progDesc, short, str, strArgument)
 import System.Exit              (ExitCode(ExitSuccess), die, exitWith)
 
 --------------------------------------------------------------------------------
@@ -46,6 +46,7 @@ data Command = Prepare
              | Run ProjectTarget Args
              | Update
              | Info InfoType
+             | Version
   deriving (Eq, Show, Read)
 
 data InfoType = AvailableTools
@@ -90,6 +91,7 @@ parseCommand = (hsubparser . mconcat $
   , command "info"    (info (Info <$> parseInfo)
                             (progDesc "Build tool information; useful for debugging."))
   ])
+  <|> flag' Version (long "version" <> short 'V')
   <|> pure (Build Nothing)
 
 parseTarget :: Parser ProjectTarget
@@ -135,6 +137,7 @@ runCommand tools cmd = do
           Update        -> tooled update
           Targets       -> printSuccess printTargets
           Info it       -> printSuccess (printInfo it)
+          Version       -> putStrLn versionInfo >> returnSuccess
   exitWith ec
   where
     tooled :: (GlobalEnv -> WrappedTool Valid -> IO a) -> IO a
@@ -143,9 +146,11 @@ runCommand tools cmd = do
     toolFail :: IO a
     toolFail = die "No possible tool found."
 
+    returnSuccess = return ExitSuccess
+
     printSuccess act = do out <- act
                           putStrLn out
-                          return ExitSuccess
+                          returnSuccess
 
     printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
