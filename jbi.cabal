@@ -1,5 +1,5 @@
 name:                jbi
-version:             0.1.0.0
+version:             0.2.0.0
 synopsis:            Just Build It - a "do what I mean" abstraction for Haskell build tools
 description:
   If you work with multiple Haskell projects, it can be annoying have to
