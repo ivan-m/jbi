@@ -1,18 +1,17 @@
-# Ebal
+Emacs support for jbi
+=====================
 
 [![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](http://www.gnu.org/licenses/gpl-3.0.txt)
-[![MELPA](https://melpa.org/packages/ebal-badge.svg)](https://melpa.org/#/ebal)
-[![Build Status](https://travis-ci.org/mrkkrp/ebal.svg?branch=master)](https://travis-ci.org/mrkkrp/ebal)
+[![MELPA](https://melpa.org/packages/jbi-badge.svg)](https://melpa.org/#/jbi)
+[![Build Status](https://travis-ci.org/ivan-m/jbi.svg)](https://travis-ci.org/ivan-m/jbi)
 
-*If you're using stack, please prefer
-[hasky-stack](https://github.com/hasky-mode/hasky-stack) from now on. Ebal
-is in maintenance mode.*
+This is based upon [ebal](https://github.com/mrkkrp/ebal) by Mark
+Karpov, forked with permission.
 
-This is an Emacs interface to Cabal and Stack. Currently, it provides fast
-and easy access to most commands (†—commands available in Stack mode):
+This is an Emacs interface to _jbi_. Currently, it provides fast
+and easy access to most commands:
 
-* <kbd>M-x ebal-init</kbd> `cabal init` (useful even in Stack mode)
-* <kbd>M-x ebal-execute</kbd>—opens a popup menu with the following:
+* <kbd>M-x jbi-execute</kbd>—opens a popup menu with the following:
   * <kbd>b</kbd> `build` †
   * <kbd>c</kbd> `configure`
   * <kbd>d</kbd> `sdist` †
@@ -30,9 +29,6 @@ and easy access to most commands (†—commands available in Stack mode):
   * <kbd>x</kbd> `sandbox delete`
   * <kbd>z</kbd> `clean` †
 
-Note that `stack init` is called for you automatically in Stack mode when
-`stack.yaml` is missing.
-
 ## Installation
 
 If you would like to install the package manually, download or clone it and
@@ -40,37 +36,21 @@ put on Emacs' `load-path`, then you can require it in your init file like
 this:
 
 ```emacs-lisp
-(require 'ebal)
+(require 'jbi)
 ```
 
-It's available via MELPA, so you can just <kbd>M-x package-install RET ebal
+It's available via MELPA, so you can just <kbd>M-x package-install RET jbi
 RET</kbd>.
 
 ## Usage
 
-If you want to use Ebal with Stack, add this to your configuration:
-
-```emacs-lisp
-(setq ebal-operation-mode 'stack)
-```
-
-The package provides two commands:
-
-* `ebal-init` that acts as a wizard helping create new Cabal project;
-
+The package provides the:
 * `ebal-execute`—this allows to perform any command while visiting any file
   or directory in a project.
 
 You can create key bindings for these commands to simplify interaction. I
 advise creating of simple key binding at least for `ebal-execute`, since you
 will call it often.
-
-### `ebal-init`
-
-The wizard mirrors built-in Cabal command `cabal init`, but thanks to Emacs,
-it provides probably much better experience than the original command line
-tool. It's worth noticing that Ebal doesn't perform generation of `.cabal`
-file for you, it only gathers arguments for invocation of `cabal init`.
 
 ### `ebal-execute`
 
