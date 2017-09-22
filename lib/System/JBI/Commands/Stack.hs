@@ -17,10 +17,12 @@ import System.JBI.Commands.Tool
 import System.JBI.Environment
 import System.JBI.Tagged
 
-import Data.Maybe       (isJust, maybeToList)
-import System.Directory (doesDirectoryExist)
-import System.Exit      (ExitCode)
-import System.FilePath  ((</>))
+import Control.Applicative (liftA2)
+import Data.Char           (isSpace)
+import Data.Maybe          (isJust, maybeToList)
+import System.Directory    (doesDirectoryExist)
+import System.Exit         (ExitCode)
+import System.FilePath     ((</>))
 
 --------------------------------------------------------------------------------
 
@@ -43,7 +45,11 @@ instance BuildTool Stack where
 
   commandTargets = withTaggedF go
     where
-      go cmd = maybe [] lines <$> tryRunOutput cmd ["ide", "targets"]
+      go cmd = maybe [] validTargets <$> tryRunOutput cmd ["ide", "targets"]
+
+      validTargets = filter isTarget . lines
+
+      isTarget = liftA2 (&&) (not . null) (all (not . isSpace))
 
   commandBuild = commandArgsTarget ["build", "--test", "--no-run-tests", "--bench", "--no-run-benchmarks"]
 
