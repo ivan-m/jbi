@@ -208,7 +208,10 @@ data Nix
 instance CabalMode Nix where
   modeName _ = "nix"
 
-  canUseMode env _ = return (liftA2 (&&) (isJust . nixShell) (isJust . cabal2Nix) (nix env))
+  canUseMode env _ = return (has nixShell && has cabal2Nix)
+    where
+      has :: (NixSupport -> Maybe (Installed a)) -> Bool
+      has f = isJust (f (nix env))
 
   hasModeArtifacts pr = or <$> mapM (doesFileExist . (stripTag pr </>))
                                     ["shell.nix", "default.nix"]
