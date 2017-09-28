@@ -23,7 +23,8 @@ import Data.Version                 (Version, parseVersion)
 import GHC.Generics                 (Generic)
 import System.Directory             (findExecutable)
 import System.Exit                  (ExitCode(ExitSuccess))
-import System.IO                    (IOMode(WriteMode), withFile)
+import System.IO                    (IOMode(WriteMode), hPutStrLn, stderr,
+                                     withFile)
 import System.Process               (CreateProcess(..),
                                      StdStream(Inherit, UseHandle), proc,
                                      readProcessWithExitCode, waitForProcess,
@@ -125,6 +126,14 @@ tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
                           , std_out = Inherit
                           , std_err = Inherit
                           }
+
+-- | Print the error message if it isn't successful.
+tryRunErr :: String -> IO ExitCode -> IO ExitCode
+tryRunErr msg act = do
+  res <- act
+  if res == ExitSuccess
+     then return res
+     else res <$ hPutStrLn stderr msg
 
 tryRunToFile :: FilePath -> Tagged t CommandPath -> Args -> IO ExitCode
 tryRunToFile file cmd args = withFile file WriteMode $ \h ->

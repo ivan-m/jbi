@@ -25,6 +25,7 @@ import System.JBI.Tagged
 
 import Control.Applicative (liftA2, (<*>))
 import Control.Monad       (filterM)
+import Data.Bool           (bool)
 import Data.Maybe          (isJust, maybeToList)
 import Data.Proxy          (Proxy(Proxy))
 import Data.Version        (Version, makeVersion)
@@ -208,6 +209,8 @@ data Nix
 instance CabalMode Nix where
   modeName _ = "nix"
 
+  -- We don't test for nix-instantiate here, as it's just used if it
+  -- can be used.
   canUseMode env _ = return (has nixShell && has cabal2Nix)
     where
       has :: (NixSupport -> Maybe (Installed a)) -> Bool
@@ -229,7 +232,26 @@ instance CabalMode Nix where
   -- changes.
   cabalConfigure env _ = case path <$> nixShell (nix env) of
                            Nothing -> die "nix-shell required"
-                           Just ns -> tryRun ns ["--run", "cabal configure --enable-tests --enable-benchmarks"]
+                           Just ns -> do
+                             args <- extraArgs
+                             tryRunErr
+                               "Configuration failed; you may need to manually enable 'withBenchmarkDepends' or 'doBenchmark' in your shell.nix file."
+                               (tryRun ns (args ++ ["--run", "cabal configure --enable-tests --enable-benchmarks"]))
+    where
+      extraArgs = bool [] ["--arg", "doBenchmark", "true"] <$> canBench
+
+      canBench =
+        case path <$> nixInstantiate (nix env) of
+          Nothing -> return False
+          Just ni -> do
+            res <- tryRunLine (stripTag ni) ["--eval", "--expr", "with import <nixpkgs> {}; haskell.lib ? doBenchmark"]
+            return $ case res of
+                       Just "true" -> maybe False (>= c2nBenchSupport) (cabal2Nix (nix env) >>= version)
+                       _           -> False
+
+      c2nBenchSupport :: Tagged Cabal2Nix Version
+      c2nBenchSupport = tag (makeVersion [2,6])
+
 
   cabalClean env cmd = commandArg "clean" env cmd
                        .&&. rmFile "shell.nix"
