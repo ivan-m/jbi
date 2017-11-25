@@ -233,10 +233,11 @@ instance CabalMode Nix where
   cabalConfigure env _ = case path <$> nixShell (nix env) of
                            Nothing -> die "nix-shell required"
                            Just ns -> do
-                             args <- extraArgs
+                             args  <- extraArgs
+                             cArgs <- cabalArgs
                              tryRunErr
                                "Configuration failed; you may need to manually enable 'withBenchmarkDepends' or 'doBenchmark' in your shell.nix file."
-                               (tryRun ns (args ++ ["--run", "cabal configure --enable-tests --enable-benchmarks"]))
+                               (tryRun ns (args ++ ["--run", cArgs]))
     where
       extraArgs = bool [] ["--arg", "doBenchmark", "true"] <$> canBench
 
@@ -251,6 +252,12 @@ instance CabalMode Nix where
 
       c2nBenchSupport :: Tagged Cabal2Nix Version
       c2nBenchSupport = tag (makeVersion [2,6])
+
+      cabalArgs = unwords . (["cabal", "configure", "--enable-tests"] ++) . bnchArgs <$> canBench
+        where
+          bnchArgs canB
+            | canB      = ["--enable-benchmarks"]
+            | otherwise = []
 
 
   cabalClean env cmd = commandArg "clean" env cmd
