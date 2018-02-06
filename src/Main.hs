@@ -25,7 +25,7 @@ import Data.Version             (showVersion)
 import Options.Applicative      (Parser, ParserInfo, argument, command,
                                  execParser, flag', footer, fullDesc, header,
                                  help, helper, hsubparser, info, long, metavar,
-                                 progDesc, short, str, strArgument)
+                                 progDesc, short, str, strArgument, strOption)
 import System.Exit              (ExitCode(ExitSuccess), die, exitWith)
 
 --------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ main = execParser parser >>= runCommand defaultTools
 data Command = Prepare
              | Targets
              | Build (Maybe ProjectTarget)
-             | REPL  (Maybe ProjectTarget)
+             | REPL  Args (Maybe ProjectTarget)
              | Clean
              | Test
              | Bench
@@ -73,7 +73,7 @@ parseCommand = (hsubparser . mconcat $
                             (progDesc "Print available targets"))
   , command "build"   (info (Build <$> optional parseTarget)
                             (progDesc "Build the project (optionally a specified target)."))
-  , command "repl"    (info (REPL <$> optional parseTarget)
+  , command "repl"    (info (REPL <$> parseReplArgs <*> optional parseTarget)
                             (progDesc "Start a REPL.  Passing in a target is optional, but \
                                       \highly recommended when multiple targets are available."))
   , command "clean"   (info (pure Clean)
@@ -109,6 +109,12 @@ parseArgs = many (strArgument (   metavar "ARG"
                                <> help "Optional arguments to pass through to the command"
                               ))
 
+parseReplArgs :: Parser Args
+parseReplArgs = many (strOption (   long "repl-args"
+                                 <> metavar "ARG"
+                                 <> help "Optional arguments to pass through to the REPL."
+                                ))
+
 parseInfo :: Parser InfoType
 parseInfo = hsubparser . mconcat $
   [ command "tools"   (info (pure AvailableTools)
@@ -128,7 +134,7 @@ runCommand tools cmd = do
   ec <- case cmd of
           Prepare       -> tooled prepare
           Build mt      -> tooled (build mt)
-          REPL mt       -> tooled (repl mt)
+          REPL args mt  -> tooled (repl args mt)
           Clean         -> tooled clean
           Test          -> tooled test
           Bench         -> tooled bench

@@ -23,6 +23,8 @@ import System.JBI.Commands.Tool
 import System.JBI.Environment
 import System.JBI.Tagged
 
+import System.Process (showCommandForUser)
+
 import Control.Applicative (liftA2, (<*>))
 import Control.Monad       (filterM)
 import Data.Bool           (bool)
@@ -69,7 +71,7 @@ instance (CabalMode mode) => BuildTool (Cabal mode) where
 
   commandBuild env cmd = cabalTry env cmd . cabalBuild env cmd
 
-  commandRepl env cmd = cabalTry env cmd . cabalRepl env cmd
+  commandRepl env cmd rargs = cabalTry env cmd . cabalRepl env cmd rargs
 
   commandClean = cabalClean
 
@@ -138,12 +140,16 @@ class CabalMode mode where
   cabalConfigure :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalBuild :: GlobalEnv -> Tagged (Cabal mode) CommandPath
-                  -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
+                -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
   cabalBuild = commandArgTarget "build"
 
   cabalRepl :: GlobalEnv -> Tagged (Cabal mode) CommandPath
-               -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
-  cabalRepl = commandArgsTarget ["repl", "--ghc-options=-ferror-spans"]
+               -> Tagged (Cabal mode) Args
+               -> Maybe (Tagged (Cabal mode) ProjectTarget)
+               -> IO ExitCode
+  cabalRepl env cmd rargs = commandArgsTarget ("repl" : ghcArgs) env cmd
+    where
+      ghcArgs = ["--ghc-options", unwords (stripTag rargs :: Args)]
 
   cabalClean :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
@@ -233,6 +239,9 @@ instance CabalMode Nix where
   cabalConfigure env _ = case path <$> nixShell (nix env) of
                            Nothing -> die "nix-shell required"
                            Just ns -> do
+                             -- We now evaluate canBench twice, which isn't ideal.
+                             --
+                             -- Should also warn if it's False.
                              args  <- extraArgs
                              cArgs <- cabalArgs
                              tryRunErr
@@ -358,4 +367,6 @@ commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> GlobalEnv -> Tagged (Cabal mode) CommandPath
                -> IO ExitCode
-commandArgs args _env cmd = tryRun cmd args
+commandArgs args _env cmd = do
+  putStrLn (showCommandForUser (stripTag cmd) args)
+  tryRun cmd args

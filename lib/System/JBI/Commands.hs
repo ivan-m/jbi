@@ -144,8 +144,8 @@ targets = runPrepared (const (fmap stripTags . commandTargets))
 build :: Maybe ProjectTarget -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
 build targ = runPrepared (\env cp -> commandBuild env cp (tagInner (tag targ)))
 
-repl :: Maybe ProjectTarget -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
-repl targ = runPrepared (\env cp -> commandRepl env cp (tagInner (tag targ)))
+repl :: Args -> Maybe ProjectTarget -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
+repl rargs targ = runPrepared (\env cp -> commandRepl env cp (Tagged rargs) (tagInner (tag targ)))
 
 clean :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
 clean = runPrepared commandClean

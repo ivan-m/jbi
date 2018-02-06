@@ -53,7 +53,17 @@ instance BuildTool Stack where
 
   commandBuild = commandArgsTarget ["build", "--test", "--no-run-tests", "--bench", "--no-run-benchmarks"]
 
-  commandRepl = commandArgsTarget ["ghci", "--ghci-options=-ferror-spans", "--test", "--bench", "--no-load"]
+  commandRepl env cmd rargs = commandArgsTarget stackArgs env cmd
+    where
+      stackArgs = [ "ghci"
+                  , "--ghci-options"
+                  , ghcArgs
+                  , "--test"
+                  , "--bench"
+                  , "--no-load"
+                  ]
+
+      ghcArgs = unwords (stripTag rargs :: Args)
 
   commandClean = commandArgs ["clean", "--full"]
 

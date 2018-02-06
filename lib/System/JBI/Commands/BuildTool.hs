@@ -68,13 +68,13 @@ class (Tool bt) => BuildTool bt where
   commandBuild :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                   -> IO ExitCode
 
-  -- | Launch a @ghci@ session within the current project.  Should
-  --   pass through the @-ferror-spans@ argument to the underlying
-  --   ghci process.
+  -- | Launch a @ghci@ session within the current project.
+  --
+  --   Takes a list of interpreter arguments.
   --
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
-                 -> IO ExitCode
+  commandRepl :: GlobalEnv -> Tagged bt CommandPath -> Tagged bt Args
+                 -> Maybe (Tagged bt ProjectTarget) -> IO ExitCode
 
   -- | Remove /all/ build artifacts of using this build tool (that is,
   --   afterwards 'hasBuildArtifacts' should return 'False').
