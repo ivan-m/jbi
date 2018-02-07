@@ -20,6 +20,7 @@ module System.JBI
   , infoProjectDir
     -- * System state\/environment
   , Env(..)
+  , getEnvironment
   , ToolEnv(..)
   , toolEnv
     -- ** Runtime configuration
@@ -69,7 +70,7 @@ withTool :: Config -> IO res
             -> (Env -> WrappedTool Valid -> IO res)
             -> [WrappedTool proxy] -> IO res
 withTool cfg onFailure f tools = do
-  env <- Env cfg <$> toolEnv
+  env <- getEnvironment cfg
   mtool <- chooseTool env tools
   maybe onFailure (f env) mtool
 
@@ -83,7 +84,14 @@ data Information = Information
   , toolDetails :: ![WrappedTool ToolInformation]
   } deriving (Show, Generic, ToJSON)
 
-getInformation :: [WrappedTool proxy] -> IO Information
-getInformation tools = do
-  tenv <- toolEnv
-  Information tenv <$> P.mapM (toolInformation (Env defaultConfig tenv)) tools
+getInformation :: Config -> [WrappedTool proxy] -> IO Information
+getInformation cfg tools = do
+  tenv <- toolEnv cfg
+  Information tenv <$> mapMer (toolInformation (Env cfg tenv)) tools
+  where
+    -- When debugging, output of tool commands get mangled in parallel
+    mapMer | debugMode cfg = mapM
+           | otherwise     = P.mapM
+
+getEnvironment :: Config -> IO Env
+getEnvironment cfg = Env cfg <$> toolEnv cfg

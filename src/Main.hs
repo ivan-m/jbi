@@ -26,7 +26,7 @@ import Options.Applicative      (Parser, ParserInfo, argument, command,
                                  eitherReader, execParser, flag', footer,
                                  fullDesc, header, help, helper, hsubparser,
                                  info, long, metavar, option, progDesc, short,
-                                 str, strArgument)
+                                 str, strArgument, switch)
 import System.Exit              (ExitCode(ExitSuccess), die, exitWith)
 
 import Text.ParserCombinators.ReadP (ReadP, char, eof, get, munch1, readP_to_S,
@@ -76,7 +76,11 @@ versionInfo :: String
 versionInfo = "jbi " ++ showVersion version ++ " - Just Build It and Hack On!"
 
 parseConfig :: Parser Config
-parseConfig = pure defaultConfig
+parseConfig = Config <$> parseDebug
+  where
+    parseDebug = switch (   long "debug"
+                         <> help "Print debugging information whilst running."
+                        )
 
 parseCommand :: Parser Command
 parseCommand = (hsubparser . mconcat $
@@ -182,7 +186,7 @@ runAction tools act = do
   exitWith ec
   where
     tooled :: (Env -> WrappedTool Valid -> IO a) -> IO a
-    tooled f = withTool (actConfig act) toolFail f tools
+    tooled f = withTool cfg toolFail f tools
 
     toolFail :: IO a
     toolFail = die "No possible tool found."
@@ -195,7 +199,7 @@ runAction tools act = do
 
     printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
-    withChosen f = do env <- Env (actConfig act) <$> toolEnv
+    withChosen f = do env <- getEnvironment cfg
                       mTool <- chooseTool env tools
                       maybe toolFail (return . f) mTool
 
@@ -204,7 +208,9 @@ runAction tools act = do
     printInfo AvailableTools = return . multiLine . map toolName $ tools
     printInfo ChosenTool     = withChosen toolName
     printInfo ProjectDir     = withChosen (rootPath . infoProjectDir)
-    printInfo Detailed       = jsonStr <$> getInformation tools
+    printInfo Detailed       = jsonStr <$> getInformation cfg tools
+
+    cfg = actConfig act
 
 -- Unlike unlines, this doesn't add a trailing newline.
 multiLine :: [String] -> String

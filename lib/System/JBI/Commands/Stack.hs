@@ -43,9 +43,9 @@ instance BuildTool Stack where
   commandPrepare env cmd = commandArg "setup" env cmd
                            .&&. commandArgs ["build", "--dry-run"] env cmd
 
-  commandTargets = withTaggedF go
+  commandTargets cfg = withTaggedF go
     where
-      go cmd = maybe [] validTargets <$> tryRunOutput cmd ["ide", "targets"]
+      go cmd = maybe [] validTargets <$> tryRunOutput cfg cmd ["ide", "targets"]
 
       validTargets = filter isTarget . lines
 
@@ -101,7 +101,7 @@ commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> Env -> Tagged Stack CommandPath
                -> IO ExitCode
-commandArgs args env cmd = tryRun cmd args'
+commandArgs args env cmd = tryRun (envConfig env) cmd args'
   where
     hasNix = isJust (nixShell (nix (envTools env)))
 

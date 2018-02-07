@@ -13,6 +13,7 @@
 module System.JBI.Commands.Nix where
 
 import System.JBI.Commands.Tool
+import System.JBI.Config        (Config)
 import System.JBI.Tagged
 
 import Data.Aeson   (ToJSON)
@@ -27,10 +28,10 @@ data NixSupport = NixSupport
   , nixInstantiate :: !(Maybe (Installed NixInstantiate))
   } deriving (Eq, Ord, Show, Read, Generic, ToJSON)
 
-findNixSupport :: IO NixSupport
-findNixSupport = NixSupport <$> commandInformation
-                            <*> commandInformation
-                            <*> commandInformation
+findNixSupport :: Config -> IO NixSupport
+findNixSupport cfg = NixSupport <$> commandInformation cfg
+                                <*> commandInformation cfg
+                                <*> commandInformation cfg
 
 data NixShell
 
@@ -42,7 +43,7 @@ data Cabal2Nix
 instance Tool Cabal2Nix where
   commandName = "cabal2nix"
 
-  commandVersion = withTaggedF (tryFindVersionBy getVer)
+  commandVersion = withTaggedF . tryFindVersionBy getVer
     where
       -- There's a digit in the command name, so the naive approach
       -- doesn't work.

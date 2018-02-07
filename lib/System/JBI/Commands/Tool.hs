@@ -12,9 +12,11 @@
  -}
 module System.JBI.Commands.Tool where
 
+import System.JBI.Config
 import System.JBI.Tagged
 
 import Control.Applicative          (liftA2)
+import Control.Monad                (when)
 import Data.Aeson                   (ToJSON(toJSON))
 import Data.Char                    (isDigit)
 import Data.Maybe                   (listToMaybe)
@@ -27,7 +29,8 @@ import System.IO                    (IOMode(WriteMode), hPutStrLn, stderr,
                                      withFile)
 import System.Process               (CreateProcess(..),
                                      StdStream(Inherit, UseHandle), proc,
-                                     readProcessWithExitCode, waitForProcess,
+                                     readProcessWithExitCode,
+                                     showCommandForUser, waitForProcess,
                                      withCreateProcess)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
@@ -36,17 +39,17 @@ import Text.ParserCombinators.ReadP (eof, readP_to_S)
 class Tool t where
   commandName :: Tagged t CommandName
 
-  commandVersion :: Tagged t CommandPath -> IO (Maybe (Tagged t Version))
-  commandVersion = withTaggedF tryFindVersion
+  commandVersion :: Config -> Tagged t CommandPath -> IO (Maybe (Tagged t Version))
+  commandVersion = withTaggedF . tryFindVersion
 
 commandPath :: (Tool t) => IO (Maybe (Tagged t CommandPath))
 commandPath = withTaggedF findExecutable commandName
 
-commandInformation :: (Tool t) => IO (Maybe (Installed t))
-commandInformation = commandPath >>= mapM getVersion
+commandInformation :: (Tool t) => Config -> IO (Maybe (Installed t))
+commandInformation cfg = commandPath >>= mapM getVersion
   where
     getVersion :: (Tool t') => Tagged t' CommandPath -> IO (Installed t')
-    getVersion tcp = Installed tcp <$> commandVersion tcp
+    getVersion tcp = Installed tcp <$> commandVersion cfg tcp
 
 data GHC
 
@@ -82,7 +85,7 @@ data Installed t = Installed
 -- | Attempt to find the version of the provided command, by assuming
 --   it's contained in the first line of the output of @command
 --   --version@.
-tryFindVersion :: FilePath -> IO (Maybe Version)
+tryFindVersion :: Config -> FilePath -> IO (Maybe Version)
 tryFindVersion = tryFindVersionBy findVersion
   where
     findVersion str = takeVersion (dropWhile (not . isDigit) str)
@@ -91,9 +94,9 @@ tryFindVersion = tryFindVersionBy findVersion
 takeVersion :: String -> String
 takeVersion = takeWhile (liftA2 (||) isDigit (=='.'))
 
-tryFindVersionBy :: (String -> String) -> FilePath -> IO (Maybe Version)
-tryFindVersionBy findVersion cmd =
-  fmap (>>= parseVer) (tryRunOutput cmd ["--version"])
+tryFindVersionBy :: (String -> String) -> Config -> FilePath -> IO (Maybe Version)
+tryFindVersionBy findVersion cfg cmd =
+  fmap (>>= parseVer) (tryRunOutput cfg cmd ["--version"])
   where
     parseVer ver = case readP_to_S (parseVersion <* eof) (findVersion ver) of
                      [(v,"")] -> Just v
@@ -102,8 +105,9 @@ tryFindVersionBy findVersion cmd =
 type Args = [String]
 
 -- | Only return the stdout if the process was successful and had no stderr.
-tryRunOutput :: FilePath -> Args -> IO (Maybe String)
-tryRunOutput cmd args = do
+tryRunOutput :: Config -> FilePath -> Args -> IO (Maybe String)
+tryRunOutput cfg cmd args = do
+  printDebug cfg cmd args
   res <- readProcessWithExitCode cmd args ""
   return $ case res of
              (ExitSuccess, out, "" ) -> Just out
@@ -112,13 +116,15 @@ tryRunOutput cmd args = do
              _                       -> Nothing
 
 -- | As with 'tryRunOutput' but only return the first line (if any).
-tryRunLine :: FilePath -> Args -> IO (Maybe String)
-tryRunLine cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cmd
+tryRunLine :: Config -> FilePath -> Args -> IO (Maybe String)
+tryRunLine cfg cmd = fmap (>>= listToMaybe . lines) . tryRunOutput cfg cmd
 
 -- | Returns success of call.
-tryRun :: Tagged t CommandPath -> Args -> IO ExitCode
-tryRun cmd args = withCreateProcess cp $ \_ _ _ ph ->
-                    waitForProcess ph
+tryRun :: Config -> Tagged t CommandPath -> Args -> IO ExitCode
+tryRun cfg cmd args = do
+  printDebug cfg cmd' args
+  withCreateProcess cp $ \_ _ _ ph ->
+    waitForProcess ph
   where
     cmd' = stripTag cmd
 
@@ -135,10 +141,12 @@ tryRunErr msg act = do
      then return res
      else res <$ hPutStrLn stderr msg
 
-tryRunToFile :: FilePath -> Tagged t CommandPath -> Args -> IO ExitCode
-tryRunToFile file cmd args = withFile file WriteMode $ \h ->
-                               withCreateProcess (cp h) $ \_ _ _ ph ->
-                                 waitForProcess ph
+tryRunToFile :: Config -> FilePath -> Tagged t CommandPath -> Args -> IO ExitCode
+tryRunToFile cfg file cmd args = do
+  printDebug cfg cmd' args
+  withFile file WriteMode $ \h ->
+    withCreateProcess (cp h) $ \_ _ _ ph ->
+      waitForProcess ph
   where
     cmd' = stripTag cmd
 
@@ -146,6 +154,12 @@ tryRunToFile file cmd args = withFile file WriteMode $ \h ->
                             , std_out = UseHandle h
                             , std_err = Inherit
                             }
+
+printDebug :: Config -> FilePath -> Args -> IO ()
+printDebug cfg cmd args =
+  when (debugMode cfg) (hPutStrLn stderr (makeBox ("Running: " ++ cmdStr)))
+  where
+    cmdStr = showCommandForUser cmd args
 
 (.&&.) :: (Monad m) => m ExitCode -> m ExitCode -> m ExitCode
 m1 .&&. m2 = do ec1 <- m1

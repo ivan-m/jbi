@@ -139,7 +139,7 @@ prepare env wv = prepareWrapped env wv >> return ExitSuccess
 -- Explicitly prepare.
 
 targets :: Env -> WrappedTool Valid -> IO [ProjectTarget]
-targets = runPrepared (const (fmap stripTags . commandTargets))
+targets = runPrepared ((fmap stripTags .) . commandTargets . envConfig)
 
 build :: Maybe ProjectTarget -> Env -> WrappedTool Valid -> IO ExitCode
 build targ = runPrepared (\env cp -> commandBuild env cp (tagInner (tag targ)))

@@ -9,6 +9,17 @@
 
     * No longer supply `-ferror-spans` by default.
 
+* A `--debug` argument prints out all commands run.
+
+    This results in _many_ API changes; as a sample:
+
+    * `GlobalEnv` has been renamed to `ToolEnv`
+    * A `Config` type is now provided for run-time configuration.
+      This is now taken by most of the running commands.
+    * `Env` wraps the above two types and is an argument to most
+      `BuildTool` commands.
+
+
 * Try and support benchmarking with `cabal+nix` where possible.
 
     API change: the `NixSupport` type now contains information about
@@ -28,10 +39,6 @@
 
 * Other small tweaks to reduce the overhead of using _jbi_ over the
   build tool itself (parallel validity checking, etc.).
-
-* API-only changes
-
-    - Rename `GlobalEnv` to `ToolEnv`.
 
 ## 0.1.0.0 -- 2017-09-05
 

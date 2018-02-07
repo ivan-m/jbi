@@ -40,5 +40,5 @@ data ToolEnv = ToolEnv
   , ghc :: Maybe (Installed GHC)
   } deriving (Eq, Show, Read, Generic, ToJSON)
 
-toolEnv :: IO ToolEnv
-toolEnv = ToolEnv <$> findNixSupport <*> commandInformation
+toolEnv :: Config -> IO ToolEnv
+toolEnv cfg = ToolEnv <$> findNixSupport cfg <*> commandInformation cfg

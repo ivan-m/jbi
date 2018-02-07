@@ -12,8 +12,11 @@ module System.JBI.Config where
 
 --------------------------------------------------------------------------------
 
-data Config = Config
-  deriving (Eq, Show, Read)
+newtype Config = Config
+  { debugMode :: Bool
+  } deriving (Eq, Show, Read)
 
 defaultConfig :: Config
 defaultConfig = Config
+  { debugMode = False
+  }

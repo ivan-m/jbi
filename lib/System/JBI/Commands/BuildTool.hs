@@ -62,7 +62,7 @@ class (Tool bt) => BuildTool bt where
   commandPrepare :: Env -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
+  commandTargets :: Config -> Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandBuild :: Env -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
@@ -139,7 +139,7 @@ data BuildProject bt = BuildProject
 commandBuildUsage :: (BuildTool bt) => Env
                      -> IO (Maybe (BuildUsage bt))
 commandBuildUsage env = do
-  mInst <- commandInformation
+  mInst <- commandInformation (envConfig env)
   forM mInst $ \inst ->
     BuildUsage inst <$> canUseCommand env (path inst)
                     <*> commandBuildProject (path inst)

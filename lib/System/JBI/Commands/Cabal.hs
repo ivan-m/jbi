@@ -108,7 +108,8 @@ class CabalMode mode where
   canUseMode :: Env -> Tagged (Cabal mode) CommandPath -> IO Bool
   canUseMode env cp = case needsMinCabal of
                         Nothing -> return hasGHC
-                        Just mv -> maybe hasGHC (mv <=) <$> commandVersion cp
+                        Just mv -> maybe hasGHC (mv <=)
+                                   <$> commandVersion (envConfig env) cp
     where
       hasGHC = isJust (ghc (envTools env))
 
@@ -125,9 +126,9 @@ class CabalMode mode where
 
   cabalPrepare :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
-  cabalTargets :: Tagged (Cabal mode) CommandPath
+  cabalTargets :: Config -> Tagged (Cabal mode) CommandPath
                   -> IO [Tagged (Cabal mode) ProjectTarget]
-  cabalTargets = withTaggedF go
+  cabalTargets _ = withTaggedF go
     where
       -- Make withTaggedF happy
       go :: FilePath -> IO [String]
@@ -226,7 +227,7 @@ instance CabalMode Nix where
   -- Note that commandPrepare is meant to be run within ProjectRoot
   cabalPrepare env _ = case path <$> cabal2Nix (nix (envTools env)) of
                          Nothing  -> die "cabal2Nix required"
-                         Just c2n -> tryRunToFile "shell.nix" c2n ["--shell", "."]
+                         Just c2n -> tryRunToFile (envConfig env) "shell.nix" c2n ["--shell", "."]
 
   -- It is tempting to want to run cabal2nix again here just in case,
   -- but people might have customised variants (different
@@ -244,17 +245,18 @@ instance CabalMode Nix where
                              cArgs <- cabalArgs
                              tryRunErr
                                "Configuration failed; you may need to manually enable 'withBenchmarkDepends' or 'doBenchmark' in your shell.nix file."
-                               (tryRun ns (args ++ ["--run", cArgs]))
+                               (tryRun cfg ns (args ++ ["--run", cArgs]))
     where
       extraArgs = bool [] ["--arg", "doBenchmark", "true"] <$> canBench
 
       nixEnv = nix (envTools env)
+      cfg = envConfig env
 
       canBench =
         case path <$> nixInstantiate nixEnv of
           Nothing -> return False
           Just ni -> do
-            res <- tryRunLine (stripTag ni) ["--eval", "--expr", "with import <nixpkgs> {}; haskell.lib ? doBenchmark"]
+            res <- tryRunLine cfg (stripTag ni) ["--eval", "--expr", "with import <nixpkgs> {}; haskell.lib ? doBenchmark"]
             return $ case res of
                        Just "true" -> maybe False (>= c2nBenchSupport) (cabal2Nix nixEnv >>= version)
                        _           -> False
@@ -366,4 +368,4 @@ commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> Env -> Tagged (Cabal mode) CommandPath
                -> IO ExitCode
-commandArgs args _env cmd = tryRun cmd args
+commandArgs args env cmd = tryRun (envConfig env) cmd args
