@@ -14,7 +14,7 @@ license:             MIT
 license-file:        LICENSE
 author:              Ivan Lazar Miljenovic
 maintainer:          Ivan.Miljenovic@gmail.com
--- copyright:
+copyright:           Ivan Lazar Miljenovic
 category:            Development
 build-type:          Simple
 extra-source-files:  ChangeLog.md, README.md

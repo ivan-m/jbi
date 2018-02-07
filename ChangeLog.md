@@ -1,6 +1,6 @@
 # Revision history for jbi
 
-## 0.2.0.0 -- 2017-09-xx
+## 0.2.0.0 -- 2018-02-07
 
 * Add a `--version` (and `-V`) flag to the executable.
 
@@ -18,7 +18,6 @@
       This is now taken by most of the running commands.
     * `Env` wraps the above two types and is an argument to most
       `BuildTool` commands.
-
 
 * Try and support benchmarking with `cabal+nix` where possible.
 
