@@ -22,10 +22,10 @@ import GHC.Generics (Generic)
 
 --------------------------------------------------------------------------------
 
-data GlobalEnv = GlobalEnv
+data ToolEnv = ToolEnv
   { nix :: NixSupport
   , ghc :: Maybe (Installed GHC)
   } deriving (Eq, Show, Read, Generic, ToJSON)
 
-globalEnv :: IO GlobalEnv
-globalEnv = GlobalEnv <$> findNixSupport <*> commandInformation
+toolEnv :: IO ToolEnv
+toolEnv = ToolEnv <$> findNixSupport <*> commandInformation

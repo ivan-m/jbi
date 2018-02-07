@@ -71,7 +71,7 @@ withWrapped f (Wrapped bt) = f bt
 toolName :: WrappedTool proxy -> String
 toolName = withWrapped prettyName
 
-toolInformation :: GlobalEnv -> WrappedTool proxy -> IO (WrappedTool ToolInformation)
+toolInformation :: ToolEnv -> WrappedTool proxy -> IO (WrappedTool ToolInformation)
 toolInformation env (Wrapped pr) = Wrapped <$> commandToolInformation env pr
 
 --------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ infoProjectDir :: WrappedTool Valid -> ProjectRoot
 infoProjectDir = withWrapped (stripTag . projectDir)
 
 -- This is pretty ugly; one way to clean it up would be to use MaybeT.
-checkValidity :: GlobalEnv -> WrappedTool proxy -> IO (Maybe (WrappedTool Valid))
+checkValidity :: ToolEnv -> WrappedTool proxy -> IO (Maybe (WrappedTool Valid))
 checkValidity env (Wrapped p) = fmap Wrapped <$> check p
   where
     check :: (BuildTool bt) => proxy' bt -> IO (Maybe (Valid bt))
@@ -112,7 +112,7 @@ runInProject :: (forall bt. (BuildTool bt) => Tagged bt CommandPath -> IO res)
 runInProject f (Wrapped val) = withCurrentDirectory (stripTag (projectDir val))
                                                     (f (command val))
 
-prepareWrapped :: GlobalEnv -> WrappedTool Valid -> IO (WrappedTool Valid)
+prepareWrapped :: ToolEnv -> WrappedTool Valid -> IO (WrappedTool Valid)
 prepareWrapped env wt@(Wrapped val) = do
   ec <- runInProject (commandPrepare env) wt
   case ec of
@@ -123,8 +123,8 @@ prepareWrapped env wt@(Wrapped val) = do
          else die "Preparation failed"
     _           -> die "Could not prepare"
 
-runPrepared :: (forall bt. (BuildTool bt) => GlobalEnv -> Tagged bt CommandPath -> IO res)
-               -> GlobalEnv -> WrappedTool Valid -> IO res
+runPrepared :: (forall bt. (BuildTool bt) => ToolEnv -> Tagged bt CommandPath -> IO res)
+               -> ToolEnv -> WrappedTool Valid -> IO res
 runPrepared f env wv = do
   wv' <- if not (alreadyUsed wv)
             then prepareWrapped env wv
@@ -134,33 +134,33 @@ runPrepared f env wv = do
 --------------------------------------------------------------------------------
 -- This mimics the actual command-level portion of BuildTool
 
-prepare :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
+prepare :: ToolEnv -> WrappedTool Valid -> IO ExitCode
 prepare env wv = prepareWrapped env wv >> return ExitSuccess
 -- Explicitly prepare.
 
-targets :: GlobalEnv -> WrappedTool Valid -> IO [ProjectTarget]
+targets :: ToolEnv -> WrappedTool Valid -> IO [ProjectTarget]
 targets = runPrepared (const (fmap stripTags . commandTargets))
 
-build :: Maybe ProjectTarget -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
+build :: Maybe ProjectTarget -> ToolEnv -> WrappedTool Valid -> IO ExitCode
 build targ = runPrepared (\env cp -> commandBuild env cp (tagInner (tag targ)))
 
-repl :: Args -> Maybe ProjectTarget -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
+repl :: Args -> Maybe ProjectTarget -> ToolEnv -> WrappedTool Valid -> IO ExitCode
 repl rargs targ = runPrepared (\env cp -> commandRepl env cp (Tagged rargs) (tagInner (tag targ)))
 
-clean :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
+clean :: ToolEnv -> WrappedTool Valid -> IO ExitCode
 clean = runPrepared commandClean
 
-test :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
+test :: ToolEnv -> WrappedTool Valid -> IO ExitCode
 test = runPrepared commandTest
 
-bench :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
+bench :: ToolEnv -> WrappedTool Valid -> IO ExitCode
 bench = runPrepared commandBench
 
-exec :: String -> Args -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
+exec :: String -> Args -> ToolEnv -> WrappedTool Valid -> IO ExitCode
 exec cmd args = runPrepared (\env cp -> commandExec env cp cmd args)
 
-run :: ProjectTarget -> Args -> GlobalEnv -> WrappedTool Valid -> IO ExitCode
+run :: ProjectTarget -> Args -> ToolEnv -> WrappedTool Valid -> IO ExitCode
 run targ args = runPrepared (\env cp -> commandRun env cp (tag targ) args)
 
-update :: GlobalEnv -> WrappedTool Valid -> IO ExitCode
+update :: ToolEnv -> WrappedTool Valid -> IO ExitCode
 update = runPrepared commandUpdate

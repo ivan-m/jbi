@@ -29,6 +29,10 @@
 * Other small tweaks to reduce the overhead of using _jbi_ over the
   build tool itself (parallel validity checking, etc.).
 
+* API-only changes
+
+    - Rename `GlobalEnv` to `ToolEnv`.
+
 ## 0.1.0.0 -- 2017-09-05
 
 * First version. Released on an semi-suspecting world.

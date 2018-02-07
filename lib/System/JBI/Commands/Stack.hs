@@ -89,17 +89,17 @@ instance NamedTool Stack
 stackYaml :: String
 stackYaml = "stack.yaml"
 
-commandArgsTarget :: Args -> GlobalEnv -> Tagged Stack CommandPath
+commandArgsTarget :: Args -> ToolEnv -> Tagged Stack CommandPath
                      -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
 commandArgsTarget args env cmd mt = commandArgs args' env cmd
   where
     args' = args ++ maybeToList (fmap stripTag mt)
 
-commandArg :: String -> GlobalEnv -> Tagged Stack CommandPath
+commandArg :: String -> ToolEnv -> Tagged Stack CommandPath
               -> IO ExitCode
 commandArg arg = commandArgs [arg]
 
-commandArgs :: Args -> GlobalEnv -> Tagged Stack CommandPath
+commandArgs :: Args -> ToolEnv -> Tagged Stack CommandPath
                -> IO ExitCode
 commandArgs args env cmd = tryRun cmd args'
   where

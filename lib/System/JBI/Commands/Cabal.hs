@@ -83,7 +83,7 @@ instance (CabalMode mode) => BuildTool (Cabal mode) where
 
   commandUpdate = cabalUpdate
 
-cabalTry :: (CabalMode mode) => GlobalEnv -> Tagged (Cabal mode) CommandPath
+cabalTry :: (CabalMode mode) => ToolEnv -> Tagged (Cabal mode) CommandPath
             -> IO ExitCode -> IO ExitCode
 cabalTry env cmd = tryCommand "Command failed, trying to re-configure"
                               (cabalConfigure env cmd)
@@ -105,7 +105,7 @@ class CabalMode mode where
   needsMinCabal = Nothing
 
   -- | @since 0.2.0.0
-  canUseMode :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO Bool
+  canUseMode :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO Bool
   canUseMode env cp = case needsMinCabal of
                         Nothing -> return hasGHC
                         Just mv -> maybe hasGHC (mv <=) <$> commandVersion cp
@@ -123,7 +123,7 @@ class CabalMode mode where
 
   hasModeArtifacts :: Tagged (Cabal mode) ProjectRoot -> IO Bool
 
-  cabalPrepare :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalPrepare :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalTargets :: Tagged (Cabal mode) CommandPath
                   -> IO [Tagged (Cabal mode) ProjectTarget]
@@ -135,13 +135,13 @@ class CabalMode mode where
 
   -- | This is an additional function than found in 'BuildTool'.  May
   --   include installing dependencies.
-  cabalConfigure :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalConfigure :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
-  cabalBuild :: GlobalEnv -> Tagged (Cabal mode) CommandPath
+  cabalBuild :: ToolEnv -> Tagged (Cabal mode) CommandPath
                 -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
   cabalBuild = commandArgTarget "build"
 
-  cabalRepl :: GlobalEnv -> Tagged (Cabal mode) CommandPath
+  cabalRepl :: ToolEnv -> Tagged (Cabal mode) CommandPath
                -> Tagged (Cabal mode) Args
                -> Maybe (Tagged (Cabal mode) ProjectTarget)
                -> IO ExitCode
@@ -149,26 +149,26 @@ class CabalMode mode where
     where
       ghcArgs = ["--ghc-options", unwords (stripTag rargs :: Args)]
 
-  cabalClean :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalClean :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
-  cabalTest :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalTest :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalTest = commandArg "test"
 
-  cabalBench :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalBench :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalBench = commandArg "bench"
 
-  cabalExec :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> String -> Args -> IO ExitCode
+  cabalExec :: ToolEnv -> Tagged (Cabal mode) CommandPath -> String -> Args -> IO ExitCode
   cabalExec env cmd prog progArgs = commandArgs args env cmd
     where
       args = "exec" : prog : "--" : progArgs
 
-  cabalRun :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> Tagged (Cabal mode) ProjectTarget
+  cabalRun :: ToolEnv -> Tagged (Cabal mode) CommandPath -> Tagged (Cabal mode) ProjectTarget
               -> Args -> IO ExitCode
   cabalRun env cmd prog progArgs = commandArgs args env cmd
     where
       args = "run" : componentName (stripTag prog) : "--" : progArgs
 
-  cabalUpdate :: GlobalEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalUpdate :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalUpdate = commandArg "update"
 
 --------------------------------------------------------------------------------
@@ -349,20 +349,20 @@ getComponents gpd = concat
 
 --------------------------------------------------------------------------------
 
-commandArgsTarget :: Args -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+commandArgsTarget :: Args -> ToolEnv -> Tagged (Cabal mode) CommandPath
                      -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
 commandArgsTarget args env cmd mt = commandArgs args' env cmd
   where
     args' = args ++ maybeToList (fmap stripTag mt)
 
-commandArgTarget :: String -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+commandArgTarget :: String -> ToolEnv -> Tagged (Cabal mode) CommandPath
                     -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
 commandArgTarget = commandArgsTarget . (:[])
 
-commandArg :: String -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+commandArg :: String -> ToolEnv -> Tagged (Cabal mode) CommandPath
               -> IO ExitCode
 commandArg arg = commandArgs [arg]
 
-commandArgs :: Args -> GlobalEnv -> Tagged (Cabal mode) CommandPath
+commandArgs :: Args -> ToolEnv -> Tagged (Cabal mode) CommandPath
                -> IO ExitCode
 commandArgs args _env cmd = tryRun cmd args

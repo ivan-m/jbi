@@ -19,8 +19,8 @@ module System.JBI
   , toolName
   , infoProjectDir
     -- * System state\/environment
-  , GlobalEnv(..)
-  , globalEnv
+  , ToolEnv(..)
+  , toolEnv
     -- * Information\/Diagnostics
   , Information (..)
   , getInformation
@@ -60,24 +60,24 @@ defaultTools = [ Wrapped (Proxy :: Proxy Stack)
                , Wrapped (Proxy :: Proxy (Cabal Sandbox))
                ]
 
-withTool :: IO res -> (GlobalEnv -> WrappedTool Valid -> IO res)
+withTool :: IO res -> (ToolEnv -> WrappedTool Valid -> IO res)
             -> [WrappedTool proxy] -> IO res
 withTool onFailure f tools = do
-  env <- globalEnv
+  env <- toolEnv
   mtool <- chooseTool env tools
   maybe onFailure (f env) mtool
 
-chooseTool :: GlobalEnv -> [WrappedTool proxy] -> IO (Maybe (WrappedTool Valid))
+chooseTool :: ToolEnv -> [WrappedTool proxy] -> IO (Maybe (WrappedTool Valid))
 chooseTool env tools = do
   valid <- catMaybes <$> P.mapM (checkValidity env) tools
   return (find alreadyUsed valid <|> listToMaybe valid)
 
 data Information = Information
-  { environment :: !GlobalEnv
+  { environment :: !ToolEnv
   , toolDetails :: ![WrappedTool ToolInformation]
   } deriving (Show, Generic, ToJSON)
 
 getInformation :: [WrappedTool proxy] -> IO Information
 getInformation tools = do
-  env <- globalEnv
+  env <- toolEnv
   Information env <$> P.mapM (toolInformation env) tools

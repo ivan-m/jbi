@@ -171,7 +171,7 @@ runCommand tools cmd = do
           Version       -> putStrLn versionInfo >> returnSuccess
   exitWith ec
   where
-    tooled :: (GlobalEnv -> WrappedTool Valid -> IO a) -> IO a
+    tooled :: (ToolEnv -> WrappedTool Valid -> IO a) -> IO a
     tooled f = withTool toolFail f tools
 
     toolFail :: IO a
@@ -185,7 +185,7 @@ runCommand tools cmd = do
 
     printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
-    withChosen f = do env <- globalEnv
+    withChosen f = do env <- toolEnv
                       mTool <- chooseTool env tools
                       maybe toolFail (return . f) mTool
 
