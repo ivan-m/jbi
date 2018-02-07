@@ -204,6 +204,30 @@ features to work (e.g. calling `stack setup`).
 Run `jbi prepare`.  This is likely the only scenario you will ever
 need to explicitly run this command in.
 
+### Why don't I have benchmarking support with _cabal+nix_?
+
+Benchmarking using _cabal+nix_ requires support from `nixpkgs`.  This
+is currently present in the `unstable` branch but is not yet present
+in a release (but should hopefully be found in `18.03`).
+
+You can verify whether your version of `nixpkgs` supports benchmarking
+Haskell code with:
+
+```bash
+nix-instantiate --eval --expr 'with import <nixpkgs> {}; haskell.lib ? doBenchmark'
+```
+
+Note that _jbi_ currently doesn't support specifying which channel you
+are using and defaults to `nixpkgs`.  If you are using `unstable` you
+can try to manually configure by editing the generated `shell.nix` and
+replacing `<nixpkgs>` with `<unstable>` (or whatever you have called
+that channel) and running:
+
+```bash
+nix-shell --arg doBenchmark true \
+  --run 'cabal configure --enable-tests --enable-benchmarks'
+```
+
 ### How do I add a new build tool?
 
 Pull requests are welcome.
