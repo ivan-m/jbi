@@ -23,8 +23,6 @@ import System.JBI.Commands.Tool
 import System.JBI.Environment
 import System.JBI.Tagged
 
-import System.Process (showCommandForUser)
-
 import Control.Applicative (liftA2, (<*>))
 import Control.Monad       (filterM)
 import Data.Bool           (bool)
@@ -367,6 +365,4 @@ commandArg arg = commandArgs [arg]
 
 commandArgs :: Args -> GlobalEnv -> Tagged (Cabal mode) CommandPath
                -> IO ExitCode
-commandArgs args _env cmd = do
-  putStrLn (showCommandForUser (stripTag cmd) args)
-  tryRun cmd args
+commandArgs args _env cmd = tryRun cmd args
