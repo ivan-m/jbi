@@ -4,6 +4,11 @@
 
 * Add a `--version` (and `-V`) flag to the executable.
 
+* Try and support benchmarking with `cabal+nix` where possible.
+
+    API change: the `NixSupport` type now contains information about
+    `nix-instantiate`.
+
 * If a build tool needs the version to check validity it has to
   explicitly obtain it.
 
