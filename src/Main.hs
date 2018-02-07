@@ -23,10 +23,14 @@ import Data.Text.Lazy           (unpack)
 import Data.Text.Lazy.Builder   (toLazyText)
 import Data.Version             (showVersion)
 import Options.Applicative      (Parser, ParserInfo, argument, command,
-                                 execParser, flag', footer, fullDesc, header,
-                                 help, helper, hsubparser, info, long, metavar,
-                                 progDesc, short, str, strArgument, strOption)
+                                 eitherReader, execParser, flag', footer,
+                                 fullDesc, header, help, helper, hsubparser,
+                                 info, long, metavar, option, progDesc, short,
+                                 str, strArgument)
 import System.Exit              (ExitCode(ExitSuccess), die, exitWith)
+
+import Text.ParserCombinators.ReadP (ReadP, char, eof, get, munch1, readP_to_S,
+                                     satisfy, skipSpaces)
 
 --------------------------------------------------------------------------------
 
@@ -110,10 +114,31 @@ parseArgs = many (strArgument (   metavar "ARG"
                               ))
 
 parseReplArgs :: Parser Args
-parseReplArgs = many (strOption (   long "repl-args"
-                                 <> metavar "ARG"
-                                 <> help "Optional arguments to pass through to the REPL."
-                                ))
+parseReplArgs = concat <$> many (option readArgs (   long "repl-args"
+                                                  <> metavar "ARGS"
+                                                  <> help "Optional arguments to pass through to the REPL."
+                                                 ))
+  where
+    readArgs = eitherReader $ \inp ->
+      case readP_to_S parseSubArgs inp of
+        [(args,"")] -> Right args
+        []          -> Left "No ARGS parseable"
+        _           -> Left "Ambiguous parse of ARGS"
+
+-- Based upon Data.Attoparsec.Args.argsParser from stack
+--
+-- Using ReadP to avoid bringing in a parsing library for this one
+-- small task.
+parseSubArgs :: ReadP Args
+parseSubArgs = many (skipSpaces *> (quoted <|> unquoted) <* skipSpaces)
+               <* (eof <|> fail "Unterminated string")
+  where
+    -- munch1 is greedier than (many1 . satisfy)
+    unquoted = munch1 (not . flip elem ['"', ' '])
+    quoted = char '"' *> string <* char '"'
+    string = many (escaped <|> nonquote)
+    escaped = char '\\' *> get
+    nonquote = satisfy (/='"')
 
 parseInfo :: Parser InfoType
 parseInfo = hsubparser . mconcat $
