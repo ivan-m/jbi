@@ -89,21 +89,21 @@ instance NamedTool Stack
 stackYaml :: String
 stackYaml = "stack.yaml"
 
-commandArgsTarget :: Args -> ToolEnv -> Tagged Stack CommandPath
+commandArgsTarget :: Args -> Env -> Tagged Stack CommandPath
                      -> Maybe (Tagged Stack ProjectTarget) -> IO ExitCode
 commandArgsTarget args env cmd mt = commandArgs args' env cmd
   where
     args' = args ++ maybeToList (fmap stripTag mt)
 
-commandArg :: String -> ToolEnv -> Tagged Stack CommandPath
+commandArg :: String -> Env -> Tagged Stack CommandPath
               -> IO ExitCode
 commandArg arg = commandArgs [arg]
 
-commandArgs :: Args -> ToolEnv -> Tagged Stack CommandPath
+commandArgs :: Args -> Env -> Tagged Stack CommandPath
                -> IO ExitCode
 commandArgs args env cmd = tryRun cmd args'
   where
-    hasNix = isJust (nixShell (nix env))
+    hasNix = isJust (nixShell (nix (envTools env)))
 
     -- Take advantage of the fact that we're running in the same
     -- directory as the stack.yaml file so that stack doesn't have to

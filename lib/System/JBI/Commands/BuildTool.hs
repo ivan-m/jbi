@@ -40,7 +40,7 @@ class (Tool bt) => BuildTool bt where
   --   For example, a minimum version, need another tool installed, etc.
   --
   --   @since 0.2.0.0
-  canUseCommand :: ToolEnv -> Tagged bt CommandPath -> IO Bool
+  canUseCommand :: Env -> Tagged bt CommandPath -> IO Bool
   canUseCommand _ _ = return True
 
   -- | Try and determine the root directory for this project.
@@ -59,13 +59,13 @@ class (Tool bt) => BuildTool bt where
   --   Some manual fiddling is allowed after this.
   --
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandPrepare :: ToolEnv -> Tagged bt CommandPath -> IO ExitCode
+  commandPrepare :: Env -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
   commandTargets :: Tagged bt CommandPath -> IO [Tagged bt ProjectTarget]
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandBuild :: ToolEnv -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
+  commandBuild :: Env -> Tagged bt CommandPath -> Maybe (Tagged bt ProjectTarget)
                   -> IO ExitCode
 
   -- | Launch a @ghci@ session within the current project.
@@ -73,35 +73,35 @@ class (Tool bt) => BuildTool bt where
   --   Takes a list of interpreter arguments.
   --
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandRepl :: ToolEnv -> Tagged bt CommandPath -> Tagged bt Args
+  commandRepl :: Env -> Tagged bt CommandPath -> Tagged bt Args
                  -> Maybe (Tagged bt ProjectTarget) -> IO ExitCode
 
   -- | Remove /all/ build artifacts of using this build tool (that is,
   --   afterwards 'hasBuildArtifacts' should return 'False').
   --
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandClean :: ToolEnv -> Tagged bt CommandPath -> IO ExitCode
+  commandClean :: Env -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandTest :: ToolEnv -> Tagged bt CommandPath -> IO ExitCode
+  commandTest :: Env -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandBench :: ToolEnv -> Tagged bt CommandPath -> IO ExitCode
+  commandBench :: Env -> Tagged bt CommandPath -> IO ExitCode
 
   -- | Run an external command within this environment.
   --
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandExec :: ToolEnv -> Tagged bt CommandPath -> String -> Args -> IO ExitCode
+  commandExec :: Env -> Tagged bt CommandPath -> String -> Args -> IO ExitCode
 
   -- | Run an executable component within this environment (building
   --   it first if required).
   --
   --   Assumes 'canUseBuildTool'.  Should be run within 'ProjectRoot'.
-  commandRun :: ToolEnv -> Tagged bt CommandPath -> Tagged bt ProjectTarget
+  commandRun :: Env -> Tagged bt CommandPath -> Tagged bt ProjectTarget
                 -> Args -> IO ExitCode
 
   -- | Update index of available packages.
-  commandUpdate :: ToolEnv -> Tagged bt CommandPath -> IO ExitCode
+  commandUpdate :: Env -> Tagged bt CommandPath -> IO ExitCode
 
 -- | This class exists because of:
 --
@@ -118,8 +118,7 @@ data ToolInformation bt = ToolInformation
   , information :: !(Maybe (BuildUsage bt))
   } deriving (Eq, Show, Read, Generic, ToJSON)
 
-commandToolInformation :: (NamedTool bt)
-                          => ToolEnv -> proxy bt
+commandToolInformation :: (NamedTool bt) => Env -> proxy bt
                           -> IO (ToolInformation bt)
 commandToolInformation env pr =
   ToolInformation (prettyName pr) <$> commandBuildUsage env
@@ -137,8 +136,7 @@ data BuildProject bt = BuildProject
 
 -- | A 'Nothing' indicates that this tool cannot be used for this
 --   project (i.e. needs configuration).
-commandBuildUsage :: (BuildTool bt)
-                     => ToolEnv
+commandBuildUsage :: (BuildTool bt) => Env
                      -> IO (Maybe (BuildUsage bt))
 commandBuildUsage env = do
   mInst <- commandInformation

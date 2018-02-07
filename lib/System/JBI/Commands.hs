@@ -71,7 +71,7 @@ withWrapped f (Wrapped bt) = f bt
 toolName :: WrappedTool proxy -> String
 toolName = withWrapped prettyName
 
-toolInformation :: ToolEnv -> WrappedTool proxy -> IO (WrappedTool ToolInformation)
+toolInformation :: Env -> WrappedTool proxy -> IO (WrappedTool ToolInformation)
 toolInformation env (Wrapped pr) = Wrapped <$> commandToolInformation env pr
 
 --------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ infoProjectDir :: WrappedTool Valid -> ProjectRoot
 infoProjectDir = withWrapped (stripTag . projectDir)
 
 -- This is pretty ugly; one way to clean it up would be to use MaybeT.
-checkValidity :: ToolEnv -> WrappedTool proxy -> IO (Maybe (WrappedTool Valid))
+checkValidity :: Env -> WrappedTool proxy -> IO (Maybe (WrappedTool Valid))
 checkValidity env (Wrapped p) = fmap Wrapped <$> check p
   where
     check :: (BuildTool bt) => proxy' bt -> IO (Maybe (Valid bt))
@@ -112,7 +112,7 @@ runInProject :: (forall bt. (BuildTool bt) => Tagged bt CommandPath -> IO res)
 runInProject f (Wrapped val) = withCurrentDirectory (stripTag (projectDir val))
                                                     (f (command val))
 
-prepareWrapped :: ToolEnv -> WrappedTool Valid -> IO (WrappedTool Valid)
+prepareWrapped :: Env -> WrappedTool Valid -> IO (WrappedTool Valid)
 prepareWrapped env wt@(Wrapped val) = do
   ec <- runInProject (commandPrepare env) wt
   case ec of
@@ -123,8 +123,8 @@ prepareWrapped env wt@(Wrapped val) = do
          else die "Preparation failed"
     _           -> die "Could not prepare"
 
-runPrepared :: (forall bt. (BuildTool bt) => ToolEnv -> Tagged bt CommandPath -> IO res)
-               -> ToolEnv -> WrappedTool Valid -> IO res
+runPrepared :: (forall bt. (BuildTool bt) => Env -> Tagged bt CommandPath -> IO res)
+               -> Env -> WrappedTool Valid -> IO res
 runPrepared f env wv = do
   wv' <- if not (alreadyUsed wv)
             then prepareWrapped env wv
@@ -134,33 +134,33 @@ runPrepared f env wv = do
 --------------------------------------------------------------------------------
 -- This mimics the actual command-level portion of BuildTool
 
-prepare :: ToolEnv -> WrappedTool Valid -> IO ExitCode
+prepare :: Env -> WrappedTool Valid -> IO ExitCode
 prepare env wv = prepareWrapped env wv >> return ExitSuccess
 -- Explicitly prepare.
 
-targets :: ToolEnv -> WrappedTool Valid -> IO [ProjectTarget]
+targets :: Env -> WrappedTool Valid -> IO [ProjectTarget]
 targets = runPrepared (const (fmap stripTags . commandTargets))
 
-build :: Maybe ProjectTarget -> ToolEnv -> WrappedTool Valid -> IO ExitCode
+build :: Maybe ProjectTarget -> Env -> WrappedTool Valid -> IO ExitCode
 build targ = runPrepared (\env cp -> commandBuild env cp (tagInner (tag targ)))
 
-repl :: Args -> Maybe ProjectTarget -> ToolEnv -> WrappedTool Valid -> IO ExitCode
+repl :: Args -> Maybe ProjectTarget -> Env -> WrappedTool Valid -> IO ExitCode
 repl rargs targ = runPrepared (\env cp -> commandRepl env cp (Tagged rargs) (tagInner (tag targ)))
 
-clean :: ToolEnv -> WrappedTool Valid -> IO ExitCode
+clean :: Env -> WrappedTool Valid -> IO ExitCode
 clean = runPrepared commandClean
 
-test :: ToolEnv -> WrappedTool Valid -> IO ExitCode
+test :: Env -> WrappedTool Valid -> IO ExitCode
 test = runPrepared commandTest
 
-bench :: ToolEnv -> WrappedTool Valid -> IO ExitCode
+bench :: Env -> WrappedTool Valid -> IO ExitCode
 bench = runPrepared commandBench
 
-exec :: String -> Args -> ToolEnv -> WrappedTool Valid -> IO ExitCode
+exec :: String -> Args -> Env -> WrappedTool Valid -> IO ExitCode
 exec cmd args = runPrepared (\env cp -> commandExec env cp cmd args)
 
-run :: ProjectTarget -> Args -> ToolEnv -> WrappedTool Valid -> IO ExitCode
+run :: ProjectTarget -> Args -> Env -> WrappedTool Valid -> IO ExitCode
 run targ args = runPrepared (\env cp -> commandRun env cp (tag targ) args)
 
-update :: ToolEnv -> WrappedTool Valid -> IO ExitCode
+update :: Env -> WrappedTool Valid -> IO ExitCode
 update = runPrepared commandUpdate

@@ -19,8 +19,12 @@ module System.JBI
   , toolName
   , infoProjectDir
     -- * System state\/environment
+  , Env(..)
   , ToolEnv(..)
   , toolEnv
+    -- ** Runtime configuration
+  , Config(..)
+  , defaultConfig
     -- * Information\/Diagnostics
   , Information (..)
   , getInformation
@@ -41,6 +45,7 @@ import System.JBI.Commands
 import System.JBI.Commands.BuildTool (ToolInformation)
 import System.JBI.Commands.Cabal
 import System.JBI.Commands.Stack
+import System.JBI.Config
 import System.JBI.Environment
 
 import Control.Applicative ((<|>))
@@ -60,14 +65,15 @@ defaultTools = [ Wrapped (Proxy :: Proxy Stack)
                , Wrapped (Proxy :: Proxy (Cabal Sandbox))
                ]
 
-withTool :: IO res -> (ToolEnv -> WrappedTool Valid -> IO res)
+withTool :: Config -> IO res
+            -> (Env -> WrappedTool Valid -> IO res)
             -> [WrappedTool proxy] -> IO res
-withTool onFailure f tools = do
-  env <- toolEnv
+withTool cfg onFailure f tools = do
+  env <- Env cfg <$> toolEnv
   mtool <- chooseTool env tools
   maybe onFailure (f env) mtool
 
-chooseTool :: ToolEnv -> [WrappedTool proxy] -> IO (Maybe (WrappedTool Valid))
+chooseTool :: Env -> [WrappedTool proxy] -> IO (Maybe (WrappedTool Valid))
 chooseTool env tools = do
   valid <- catMaybes <$> P.mapM (checkValidity env) tools
   return (find alreadyUsed valid <|> listToMaybe valid)
@@ -79,5 +85,5 @@ data Information = Information
 
 getInformation :: [WrappedTool proxy] -> IO Information
 getInformation tools = do
-  env <- toolEnv
-  Information env <$> P.mapM (toolInformation env) tools
+  tenv <- toolEnv
+  Information tenv <$> P.mapM (toolInformation (Env defaultConfig tenv)) tools

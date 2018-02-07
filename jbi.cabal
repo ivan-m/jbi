@@ -33,6 +33,7 @@ library
                      , System.JBI.Commands.Nix
                      , System.JBI.Commands.Stack
                      , System.JBI.Commands.Tool
+                     , System.JBI.Config
                      , System.JBI.Environment
                      , System.JBI.Tagged
 

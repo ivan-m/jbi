@@ -35,7 +35,12 @@ import Text.ParserCombinators.ReadP (ReadP, char, eof, get, munch1, readP_to_S,
 --------------------------------------------------------------------------------
 
 main :: IO ()
-main = execParser parser >>= runCommand defaultTools
+main = execParser parser >>= runAction defaultTools
+
+data Action = Action
+  { actConfig  :: !Config
+  , actCommand :: !Command
+  } deriving (Eq, Show, Read)
 
 --------------------------------------------------------------------------------
 
@@ -59,14 +64,19 @@ data InfoType = AvailableTools
               | Detailed
               deriving (Eq, Show, Read)
 
-parser :: ParserInfo Command
-parser = info (helper <*> parseCommand) $
+parser :: ParserInfo Action
+parser = info (helper <*> prs) $
      header versionInfo
   <> fullDesc
   <> footer "No arguments is equivalent to running `build`"
+  where
+    prs = Action <$> parseConfig <*> parseCommand
 
 versionInfo :: String
 versionInfo = "jbi " ++ showVersion version ++ " - Just Build It and Hack On!"
+
+parseConfig :: Parser Config
+parseConfig = pure defaultConfig
 
 parseCommand :: Parser Command
 parseCommand = (hsubparser . mconcat $
@@ -154,9 +164,9 @@ parseInfo = hsubparser . mconcat $
 
 --------------------------------------------------------------------------------
 
-runCommand :: [WrappedTool proxy] -> Command -> IO ()
-runCommand tools cmd = do
-  ec <- case cmd of
+runAction :: [WrappedTool proxy] -> Action -> IO ()
+runAction tools act = do
+  ec <- case actCommand act of
           Prepare       -> tooled prepare
           Build mt      -> tooled (build mt)
           REPL args mt  -> tooled (repl args mt)
@@ -171,21 +181,21 @@ runCommand tools cmd = do
           Version       -> putStrLn versionInfo >> returnSuccess
   exitWith ec
   where
-    tooled :: (ToolEnv -> WrappedTool Valid -> IO a) -> IO a
-    tooled f = withTool toolFail f tools
+    tooled :: (Env -> WrappedTool Valid -> IO a) -> IO a
+    tooled f = withTool (actConfig act) toolFail f tools
 
     toolFail :: IO a
     toolFail = die "No possible tool found."
 
     returnSuccess = return ExitSuccess
 
-    printSuccess act = do out <- act
-                          putStrLn out
-                          returnSuccess
+    printSuccess ma = do out <- ma
+                         putStrLn out
+                         returnSuccess
 
     printTargets = tooled ((fmap (multiLine . map projectTarget) .) . targets)
 
-    withChosen f = do env <- toolEnv
+    withChosen f = do env <- Env (actConfig act) <$> toolEnv
                       mTool <- chooseTool env tools
                       maybe toolFail (return . f) mTool
 

@@ -83,7 +83,7 @@ instance (CabalMode mode) => BuildTool (Cabal mode) where
 
   commandUpdate = cabalUpdate
 
-cabalTry :: (CabalMode mode) => ToolEnv -> Tagged (Cabal mode) CommandPath
+cabalTry :: (CabalMode mode) => Env -> Tagged (Cabal mode) CommandPath
             -> IO ExitCode -> IO ExitCode
 cabalTry env cmd = tryCommand "Command failed, trying to re-configure"
                               (cabalConfigure env cmd)
@@ -105,12 +105,12 @@ class CabalMode mode where
   needsMinCabal = Nothing
 
   -- | @since 0.2.0.0
-  canUseMode :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO Bool
+  canUseMode :: Env -> Tagged (Cabal mode) CommandPath -> IO Bool
   canUseMode env cp = case needsMinCabal of
                         Nothing -> return hasGHC
                         Just mv -> maybe hasGHC (mv <=) <$> commandVersion cp
     where
-      hasGHC = isJust (ghc env)
+      hasGHC = isJust (ghc (envTools env))
 
   cabalProjectRoot :: Tagged (Cabal mode) CommandPath
                       -> IO (Maybe (Tagged (Cabal mode) ProjectRoot))
@@ -123,7 +123,7 @@ class CabalMode mode where
 
   hasModeArtifacts :: Tagged (Cabal mode) ProjectRoot -> IO Bool
 
-  cabalPrepare :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalPrepare :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
   cabalTargets :: Tagged (Cabal mode) CommandPath
                   -> IO [Tagged (Cabal mode) ProjectTarget]
@@ -135,13 +135,13 @@ class CabalMode mode where
 
   -- | This is an additional function than found in 'BuildTool'.  May
   --   include installing dependencies.
-  cabalConfigure :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalConfigure :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
-  cabalBuild :: ToolEnv -> Tagged (Cabal mode) CommandPath
+  cabalBuild :: Env -> Tagged (Cabal mode) CommandPath
                 -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
   cabalBuild = commandArgTarget "build"
 
-  cabalRepl :: ToolEnv -> Tagged (Cabal mode) CommandPath
+  cabalRepl :: Env -> Tagged (Cabal mode) CommandPath
                -> Tagged (Cabal mode) Args
                -> Maybe (Tagged (Cabal mode) ProjectTarget)
                -> IO ExitCode
@@ -149,26 +149,26 @@ class CabalMode mode where
     where
       ghcArgs = ["--ghc-options", unwords (stripTag rargs :: Args)]
 
-  cabalClean :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalClean :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
 
-  cabalTest :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalTest :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalTest = commandArg "test"
 
-  cabalBench :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalBench :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalBench = commandArg "bench"
 
-  cabalExec :: ToolEnv -> Tagged (Cabal mode) CommandPath -> String -> Args -> IO ExitCode
+  cabalExec :: Env -> Tagged (Cabal mode) CommandPath -> String -> Args -> IO ExitCode
   cabalExec env cmd prog progArgs = commandArgs args env cmd
     where
       args = "exec" : prog : "--" : progArgs
 
-  cabalRun :: ToolEnv -> Tagged (Cabal mode) CommandPath -> Tagged (Cabal mode) ProjectTarget
+  cabalRun :: Env -> Tagged (Cabal mode) CommandPath -> Tagged (Cabal mode) ProjectTarget
               -> Args -> IO ExitCode
   cabalRun env cmd prog progArgs = commandArgs args env cmd
     where
       args = "run" : componentName (stripTag prog) : "--" : progArgs
 
-  cabalUpdate :: ToolEnv -> Tagged (Cabal mode) CommandPath -> IO ExitCode
+  cabalUpdate :: Env -> Tagged (Cabal mode) CommandPath -> IO ExitCode
   cabalUpdate = commandArg "update"
 
 --------------------------------------------------------------------------------
@@ -218,13 +218,13 @@ instance CabalMode Nix where
   canUseMode env _ = return (has nixShell && has cabal2Nix)
     where
       has :: (NixSupport -> Maybe (Installed a)) -> Bool
-      has f = isJust (f (nix env))
+      has f = isJust (f (nix (envTools env)))
 
   hasModeArtifacts pr = or <$> mapM (doesFileExist . (stripTag pr </>))
                                     ["shell.nix", "default.nix"]
 
   -- Note that commandPrepare is meant to be run within ProjectRoot
-  cabalPrepare env _ = case path <$> cabal2Nix (nix env) of
+  cabalPrepare env _ = case path <$> cabal2Nix (nix (envTools env)) of
                          Nothing  -> die "cabal2Nix required"
                          Just c2n -> tryRunToFile "shell.nix" c2n ["--shell", "."]
 
@@ -234,7 +234,7 @@ instance CabalMode Nix where
   --
   -- Instead, people need to run @jbi prepare@ if the .cabal file
   -- changes.
-  cabalConfigure env _ = case path <$> nixShell (nix env) of
+  cabalConfigure env _ = case path <$> nixShell nixEnv of
                            Nothing -> die "nix-shell required"
                            Just ns -> do
                              -- We now evaluate canBench twice, which isn't ideal.
@@ -248,13 +248,15 @@ instance CabalMode Nix where
     where
       extraArgs = bool [] ["--arg", "doBenchmark", "true"] <$> canBench
 
+      nixEnv = nix (envTools env)
+
       canBench =
-        case path <$> nixInstantiate (nix env) of
+        case path <$> nixInstantiate nixEnv of
           Nothing -> return False
           Just ni -> do
             res <- tryRunLine (stripTag ni) ["--eval", "--expr", "with import <nixpkgs> {}; haskell.lib ? doBenchmark"]
             return $ case res of
-                       Just "true" -> maybe False (>= c2nBenchSupport) (cabal2Nix (nix env) >>= version)
+                       Just "true" -> maybe False (>= c2nBenchSupport) (cabal2Nix nixEnv >>= version)
                        _           -> False
 
       c2nBenchSupport :: Tagged Cabal2Nix Version
@@ -265,7 +267,6 @@ instance CabalMode Nix where
           bnchArgs canB
             | canB      = ["--enable-benchmarks"]
             | otherwise = []
-
 
   cabalClean env cmd = commandArg "clean" env cmd
                        .&&. rmFile "shell.nix"
@@ -349,20 +350,20 @@ getComponents gpd = concat
 
 --------------------------------------------------------------------------------
 
-commandArgsTarget :: Args -> ToolEnv -> Tagged (Cabal mode) CommandPath
+commandArgsTarget :: Args -> Env -> Tagged (Cabal mode) CommandPath
                      -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
 commandArgsTarget args env cmd mt = commandArgs args' env cmd
   where
     args' = args ++ maybeToList (fmap stripTag mt)
 
-commandArgTarget :: String -> ToolEnv -> Tagged (Cabal mode) CommandPath
+commandArgTarget :: String -> Env -> Tagged (Cabal mode) CommandPath
                     -> Maybe (Tagged (Cabal mode) ProjectTarget) -> IO ExitCode
 commandArgTarget = commandArgsTarget . (:[])
 
-commandArg :: String -> ToolEnv -> Tagged (Cabal mode) CommandPath
+commandArg :: String -> Env -> Tagged (Cabal mode) CommandPath
               -> IO ExitCode
 commandArg arg = commandArgs [arg]
 
-commandArgs :: Args -> ToolEnv -> Tagged (Cabal mode) CommandPath
+commandArgs :: Args -> Env -> Tagged (Cabal mode) CommandPath
                -> IO ExitCode
 commandArgs args _env cmd = tryRun cmd args

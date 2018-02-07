@@ -12,13 +12,26 @@
    working directories, etc.).
 
  -}
-module System.JBI.Environment where
+module System.JBI.Environment
+  ( Env(..)
+  , Config(..)
+  , ToolEnv(..)
+  , toolEnv
+  ) where
 
 import System.JBI.Commands.Nix
 import System.JBI.Commands.Tool
+import System.JBI.Config
 
 import Data.Aeson   (ToJSON)
 import GHC.Generics (Generic)
+
+--------------------------------------------------------------------------------
+
+data Env = Env
+  { envConfig :: !Config
+  , envTools  :: !ToolEnv
+  } deriving (Eq, Show, Read)
 
 --------------------------------------------------------------------------------
 
