@@ -114,7 +114,7 @@ parseArgs = many (strArgument (   metavar "ARG"
                               ))
 
 parseReplArgs :: Parser Args
-parseReplArgs = concat <$> many (option readArgs (   long "repl-args"
+parseReplArgs = concat <$> many (option readArgs (   long "repl-opts"
                                                   <> metavar "ARGS"
                                                   <> help "Optional arguments to pass through to the REPL."
                                                  ))
