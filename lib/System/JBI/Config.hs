@@ -13,10 +13,12 @@ module System.JBI.Config where
 --------------------------------------------------------------------------------
 
 data Config = Config
-  { debugMode :: !Bool
+  { debugMode  :: !Bool
+  , nixChannel :: !(Maybe String)
   } deriving (Eq, Show, Read)
 
 defaultConfig :: Config
 defaultConfig = Config
-  { debugMode = False
+  { debugMode  = False
+  , nixChannel = Nothing
   }
